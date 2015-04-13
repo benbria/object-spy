@@ -1,0 +1,29 @@
+{
+  "name": "object-spy",
+  "version": "0.0.1",
+  "description": "Examine the use of an object from inside of it",
+  "main": "./lib/index.js",
+  "keywords": [
+      "spy",
+      "test",
+      "mock",
+      "watch"
+  ],
+  "license": "MIT",
+  "directories": {
+  "lib": "./lib"
+  },
+  "dependencies": {
+    "es6-promise": "^2.0.1"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.9.1",
+    "mocha": "^2.2.4",
+    "should": "^5.2.0",
+  },
+  "scripts": {
+    "build": "coffee -c -o lib src",
+    "prepublish": "coffee -c -o lib src && mocha test",
+    "test": "mocha test"
+  }
+}
