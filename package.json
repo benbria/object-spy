@@ -11,15 +11,23 @@
   ],
   "license": "MIT",
   "directories": {
-  "lib": "./lib"
+      "lib": "./lib"
   },
+  "author": {
+    "name": "Benbria",
+    "email": "support@benbria.com",
+    "url": "benbria.com"
+  },
+  "contributors": [
+    "Bernard Llanos (https://github.com/bllanos)"
+  ],
   "dependencies": {
     "es6-promise": "^2.0.1"
   },
   "devDependencies": {
     "coffee-script": "^1.9.1",
     "mocha": "^2.2.4",
-    "should": "^5.2.0",
+    "should": "^5.2.0"
   },
   "scripts": {
     "build": "coffee -c -o lib src",
