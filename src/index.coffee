@@ -1,2 +1,1 @@
-module.exports = ->
-    console.log "Hello world!"
+module.exports = require './object_spy'
