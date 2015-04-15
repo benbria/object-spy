@@ -31,7 +31,7 @@
     "should": "^5.2.0"
   },
   "scripts": {
-    "build": "npm install && coffee -c -o lib src",
+    "build": "coffee -c -o lib src",
     "prepublish": "coffee -c -o lib src && mocha test",
     "test": "mocha test"
   }
