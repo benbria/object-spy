@@ -1,4 +1,4 @@
-{LIBNAME, WRAPPED_HIDDEN_NAME}   = require './constants'
+{LIBNAME, WRAPPED_HIDDEN_NAME}   = require '../util/constants'
 LIBNAME_LENGTH = LIBNAME.length
 
 exports.getHiddenName = getHiddenName = (name) ->

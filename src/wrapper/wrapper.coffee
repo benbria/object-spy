@@ -1,17 +1,17 @@
 _                       = require 'lodash'
 {WRAPPED_UNHIDDEN_NAME} = require '../util/constants'
-util                    = require '../util/util'
+propertyUtils         = require './propertyUtils'
 logger                  = require('../util/logger').getLogger()
 
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
 exports.wrapProperties = wrapProperties = (obj) ->
     # Avoid double-wrapping
-    if util.isWrapped(obj)
+    if propertyUtils.isWrapped(obj)
         return obj
 
     result = {}
-    util.defineHiddenValueProperty WRAPPED_UNHIDDEN_NAME, obj, result
+    propertyUtils.defineHiddenValueProperty WRAPPED_UNHIDDEN_NAME, obj, result
 
     propertyNames = Object.getOwnPropertyNames obj
 
@@ -22,7 +22,7 @@ exports.wrapProperties = wrapProperties = (obj) ->
 
     # Ignore object-spy properties
     propertyNames = _.filter propertyNames, (propName) ->
-        !util.isHiddenName(propName)
+        !propertyUtils.isHiddenName(propName)
 
     _.forEach propertyNames, (propName) ->
         prop = obj[propName]
@@ -44,7 +44,7 @@ exports.wrapProperties = wrapProperties = (obj) ->
                 get: ->
                     currentValue = obj[propName]
                     logger.info "get() called for '#{propName}', value is currently #{currentValue}"
-                    if typeof currentValue is 'object' and not util.isWrapped(currentValue)
+                    if typeof currentValue is 'object' and not propertyUtils.isWrapped(currentValue)
                         result[propName] = wrapProperties(currentValue)
                     return currentValue
                 set: (newValue) ->

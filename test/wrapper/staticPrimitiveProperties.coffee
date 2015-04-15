@@ -3,7 +3,7 @@ should                  = require 'should'
 _                       = require 'lodash'
 wrappedValidator        = require '../testHelper/wrappedValidator'
 wrapper                 = srcRequire 'wrapper/wrapper'
-util                    = srcRequire 'util/util'
+propertyUtils           = srcRequire 'wrapper/propertyUtils'
 
 # TODO assert all hidden properties are non-enumerable
 
@@ -17,4 +17,4 @@ describe 'Wrapping objects with primitive properties and no property additions o
         # All properties should be hidden
         propertyNames = Object.getOwnPropertyNames wrapped
         _.forEach propertyNames, (propName) ->
-            util.isHiddenName(propName).should.be.true
+            propertyUtils.isHiddenName(propName).should.be.true
