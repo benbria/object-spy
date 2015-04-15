@@ -1,7 +1,7 @@
-{LIBNAME}   = require './constants'
+{LIBNAME, WRAPPED_HIDDEN_NAME}   = require './constants'
 LIBNAME_LENGTH = LIBNAME.length
 
-exports.getHiddenName = (name) ->
+exports.getHiddenName = getHiddenName = (name) ->
     return "#{LIBNAME}#{name}"
 
 exports.isHiddenName = isHiddenName = (name) ->
@@ -11,3 +11,14 @@ exports.getUnhiddenName = (hiddenName) ->
     if isHiddenName hiddenName
         return hiddenName.substring LIBNAME.length
     return null
+
+exports.isWrapped = (obj) ->
+    obj[WRAPPED_HIDDEN_NAME]?
+
+exports.defineHiddenValueProperty = (unhiddenName, value, obj) ->
+    Object.defineProperty(obj, getHiddenName(unhiddenName), {
+        enumerable: false,
+        configurable: false,
+        writable: false,
+        value: value
+    })
