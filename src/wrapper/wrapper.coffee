@@ -8,7 +8,7 @@ logger      = require('../util/logger').getLogger()
 exports.wrapProperties = wrapProperties = (obj) ->
     # Avoid double-wrapping
     if obj[WRAPPED]?
-     return obj
+        return obj
 
     result = {}
     result[WRAPPED] = obj
@@ -22,7 +22,7 @@ exports.wrapProperties = wrapProperties = (obj) ->
 
     # Ignore object-spy properties
     propertyNames = _.filter propertyNames, (propName) ->
-        not util.isHiddenName propName
+        !util.isHiddenName(propName)
 
     _.forEach propertyNames, (propName) ->
         prop = obj[propName]
@@ -42,14 +42,15 @@ exports.wrapProperties = wrapProperties = (obj) ->
                 configurable: descriptor.configurable
                 enumerable: descriptor.enumerable
                 get: ->
-                    logger.info "get() called for '#{propName}', value is currently #{prop}"
-                    if typeof prop is 'object' and not prop[WRAPPED]?
-                        result[propName] = wrapProperties(prop)
-                    return prop
+                    currentValue = obj[propName]
+                    logger.info "get() called for '#{propName}', value is currently #{currentValue}"
+                    if typeof currentValue is 'object' and not currentValue[WRAPPED]?
+                        result[propName] = wrapProperties(currentValue)
+                    return currentValue
                 set: (newValue) ->
-                    logger.info "set() called for '#{propName}', value is currently #{prop}"
-                    # TODO Avoid loss of data when overwriting a wrapped property
-                    result[propName] = newValue
+                    logger.info "set() called for '#{propName}', value is currently #{obj[propName]}"
+                    # TODO Avoid loss of usage data when overwriting a wrapped property
+                    obj[propName] = newValue
 
             Object.defineProperty result, propName, wrapperDescriptor
 
