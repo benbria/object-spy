@@ -1,57 +1,74 @@
-_                       = require 'lodash'
-{WRAPPED_UNHIDDEN_NAME} = require '../util/constants'
-propertyUtils         = require './propertyUtils'
-logger                  = require('../util/logger').getLogger()
+_                           = require 'lodash'
+logger                      = require('../util/logger').getLogger()
+ObservationStore            = require '../store/observationStore'
+ObservationStoreManager     = require '../store/observationStoreManager'
+{OBSERVATION_CATEGORIES}    = require '../util/constants'
 
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
-exports.wrapProperties = wrapProperties = (obj) ->
-    # Avoid double-wrapping
-    if propertyUtils.isWrapped(obj)
-        return obj
-
-    result = {}
-    propertyUtils.defineHiddenValueProperty WRAPPED_UNHIDDEN_NAME, obj, result
+exports.wrapProperties = wrapProperties = (originalObj, parentTickObj) ->
+    wrapped = {}
+    storeManager = new ObservationStoreManager(parentTickObj)
 
     propertyNames = Object.getOwnPropertyNames obj
-
-    # Ignore array length
-    if _.isArray propertyNames
-        propertyNames = _.filter propertyNames, (propName) ->
-            propName isnt 'length'
-
-    # Ignore object-spy properties
-    propertyNames = _.filter propertyNames, (propName) ->
-        !propertyUtils.isHiddenName(propName)
 
     _.forEach propertyNames, (propName) ->
         prop = obj[propName]
 
         if typeof prop is 'function'
-            logger.warn "Cannot handle functions yet."
-            result[propName] = prop # TODO spy on functions using sinon
+            logger.warn "Cannot wrap functions (yet). Property with key '#{propName}' is a function."
+            wrapped[propName] = prop
         else
             descriptor = Object.getOwnPropertyDescriptor obj, propName
 
             # Assess whether it is possible to wrap the property
             if descriptor.configurable is false
-                error = new Error "Cannot wrap a non-configurable data property."
+                error = new Error "Cannot wrap non-configurable property, key '#{propName}'."
                 logger.error error
+                wrapped[propName] = prop
 
-            wrapperDescriptor =
-                configurable: descriptor.configurable
-                enumerable: descriptor.enumerable
-                get: ->
-                    currentValue = obj[propName]
-                    logger.info "get() called for '#{propName}', value is currently #{currentValue}"
-                    if typeof currentValue is 'object' and not propertyUtils.isWrapped(currentValue)
-                        result[propName] = wrapProperties(currentValue)
-                    return currentValue
-                set: (newValue) ->
-                    logger.info "set() called for '#{propName}', value is currently #{obj[propName]}"
-                    # TODO Avoid loss of usage data when overwriting a wrapped property
-                    obj[propName] = newValue
+            else
+                propStoreManager = null
 
-            Object.defineProperty result, propName, wrapperDescriptor
+                wrapperDescriptor =
+                    configurable: descriptor.configurable
+                    enumerable: descriptor.enumerable
 
-    return result
+                    get: ->
+                        currentValue = obj[propName]
+
+                        observation = {}
+                        observation[OBSERVATION_CATEGORIES.ACCESSED] = {}
+                        observation[OBSERVATION_CATEGORIES.ACCESSED][propName] = currentValue
+
+                        if propStoreManager?
+                            propStoreManager.addOwnObservations observation
+                        else
+                            storeManager.addOwnObservations observation
+
+                        logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
+                        if typeof currentValue is 'object' and not propStoreManager?
+                            propertyWrapResult = wrapProperties(currentValue, storeManager.getPropertyTick())
+                            propStoreManager = propertyWrapResult.storeManager
+                            wrapped[propName] = propertyWrapResult.wrapped
+                            storeManager.addPropertyStore propName, propStoreManager.getOwnStore()
+                            return propertyWrapResult.wrapped
+
+                        return currentValue
+
+                    set: (newValue) ->
+                        observation = {}
+                        observation[OBSERVATION_CATEGORIES.CHANGED] = {}
+                        observation[OBSERVATION_CATEGORIES.CHANGED][propName] = newValue
+
+                        if propStoreManager?
+                            propStoreManager.addOwnObservations observation
+                        else
+                            storeManager.addOwnObservations observation
+
+                        logger.debug "set() called for '#{propName}', with new value #{newValue}"
+                        obj[propName] = newValue
+
+                Object.defineProperty wrapped, propName, wrapperDescriptor
+
+    return {wrapped, storeManager}

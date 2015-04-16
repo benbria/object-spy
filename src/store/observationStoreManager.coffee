@@ -2,14 +2,14 @@ _                       = require 'lodash'
 ObservationStore        = require './observationStore'
 
 class ObservationStoreManager
-    constructor: ->
-        propertyTick = {parentTick: 0}
+    constructor: (parentTickObj) ->
+        propertyTick = parentTickObj ? {parentTick: 0}
         ownStore = new ObservationStore(propertyTick)
         propertyTick.parentTick++
         propertiesStores = {}
 
         @getPropertyTick = ->
-            propertyTick.parentTick
+            propertyTick
 
         @addPropertyStore = (key, observationStore) ->
             propertiesStores[key] = observationStore
