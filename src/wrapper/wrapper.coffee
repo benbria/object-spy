@@ -37,11 +37,7 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
 
                     get: ->
                         currentValue = obj[propName]
-
-                        observation = {}
-                        observation[OBSERVATION_CATEGORIES.ACCESSED] = {}
-                        observation[OBSERVATION_CATEGORIES.ACCESSED][propName] = currentValue
-                        storeManager.addOwnObservations observation
+                        reportGetSetObservation storeManager, OBSERVATION_CATEGORIES.ACCESSED, propName, currentValue
 
                         logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
                         if typeof currentValue is 'object' and not propStoreManager?
@@ -59,14 +55,17 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
                         return currentValue
 
                     set: (newValue) ->
-                        observation = {}
-                        observation[OBSERVATION_CATEGORIES.CHANGED] = {}
-                        observation[OBSERVATION_CATEGORIES.CHANGED][propName] = newValue
-                        storeManager.addOwnObservations observation
-
+                        reportGetSetObservation storeManager, OBSERVATION_CATEGORIES.CHANGED, propName, newValue
                         logger.debug "set() called for '#{propName}', with new value #{newValue}"
                         obj[propName] = newValue
 
                 Object.defineProperty wrapped, propName, wrapperDescriptor
 
     return {wrapped, storeManager}
+
+reportGetSetObservation = (storeManager, category, key, value) ->
+    observation = {}
+    shortcut = observation[category] = {}
+    shortcut[key] = value
+    storeManager.addOwnObservations observation
+    return null

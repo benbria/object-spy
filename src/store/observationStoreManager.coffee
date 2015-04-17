@@ -3,7 +3,7 @@ ObservationStore        = require './observationStore'
 
 class ObservationStoreManager
     constructor: (parentTickObj) ->
-        propertyTick = parentTickObj ? {parentTick: 0}
+        propertyTick = parentTickObj ? {parentTick: -1}
         ownStore = new ObservationStore(propertyTick)
         propertyTick.parentTick++
         propertiesStores = {}
