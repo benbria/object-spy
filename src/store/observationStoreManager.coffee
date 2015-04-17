@@ -13,7 +13,6 @@ class ObservationStoreManager
 
         @addPropertyStore = (key, observationStore) ->
             propertiesStores[key] = observationStore
-            propertyTick.parentTick++
 
         @addOwnObservations = (data) ->
             ownStore.add data
@@ -24,7 +23,7 @@ class ObservationStoreManager
                     result[key] = store.get()
                     return result
                 , {}
-            return {ownData: ownStore.get(), propertyData }
+            return { ownData: ownStore.get(), propertyData }
 
         @getOwnStore = ->
             ownStore

@@ -30,7 +30,11 @@ makeObservationGroup = (parentTickObj) ->
         group[value] = makeCollection()
 
     getGroup = ->
-        return _.cloneDeep group
+        groupData = _.reduce group,
+            (result, value, key) ->
+                result[key] = value.get()
+                return result
+            , {}
 
     addGroup = (groupChanges) ->
         for name, value of OBSERVATION_CATEGORIES

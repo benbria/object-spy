@@ -22,6 +22,7 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
             descriptor = Object.getOwnPropertyDescriptor obj, propName
 
             # Assess whether it is possible to wrap the property
+            # This is probably a little stricter than necessary - Could do a more fine-grained check.
             if descriptor.configurable is false
                 error = new Error "Cannot wrap non-configurable property, key '#{propName}'."
                 logger.error error
@@ -40,17 +41,18 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
                         observation = {}
                         observation[OBSERVATION_CATEGORIES.ACCESSED] = {}
                         observation[OBSERVATION_CATEGORIES.ACCESSED][propName] = currentValue
-
-                        if propStoreManager?
-                            propStoreManager.addOwnObservations observation
-                        else
-                            storeManager.addOwnObservations observation
+                        storeManager.addOwnObservations observation
 
                         logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
                         if typeof currentValue is 'object' and not propStoreManager?
                             propertyWrapResult = wrapProperties(currentValue, storeManager.getPropertyTick())
                             propStoreManager = propertyWrapResult.storeManager
+
+                            # This results in calls to get() for all properties of `propertyWrapResult.wrapped`,
+                            # before the call to set() of `wrapped`.
+                            # I don't understand why the extra get() calls occur.
                             wrapped[propName] = propertyWrapResult.wrapped
+
                             storeManager.addPropertyStore propName, propStoreManager.getOwnStore()
                             return propertyWrapResult.wrapped
 
@@ -60,11 +62,7 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
                         observation = {}
                         observation[OBSERVATION_CATEGORIES.CHANGED] = {}
                         observation[OBSERVATION_CATEGORIES.CHANGED][propName] = newValue
-
-                        if propStoreManager?
-                            propStoreManager.addOwnObservations observation
-                        else
-                            storeManager.addOwnObservations observation
+                        storeManager.addOwnObservations observation
 
                         logger.debug "set() called for '#{propName}', with new value #{newValue}"
                         obj[propName] = newValue
