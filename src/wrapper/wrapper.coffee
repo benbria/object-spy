@@ -30,6 +30,7 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
 
             else
                 propStoreManager = null
+                suppressReport = false
 
                 wrapperDescriptor =
                     configurable: descriptor.configurable
@@ -37,17 +38,26 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
 
                     get: ->
                         currentValue = obj[propName]
-                        reportGetSetObservation storeManager, OBSERVATION_CATEGORIES.ACCESSED, propName, currentValue
+                        unless suppressReport
+                            reportGetSetObservation(
+                                storeManager,
+                                OBSERVATION_CATEGORIES.ACCESSED,
+                                propName,
+                                currentValue
+                            )
 
                         logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
                         if typeof currentValue is 'object' and not propStoreManager?
                             propertyWrapResult = wrapProperties(currentValue, storeManager.getPropertyTick())
                             propStoreManager = propertyWrapResult.storeManager
 
-                            # This results in calls to get() for all properties of `propertyWrapResult.wrapped`,
+                            # This resulted in calls to get() for all properties of `propertyWrapResult.wrapped`
                             # before the call to set() of `wrapped`.
-                            # I don't understand why the extra get() calls occur.
+                            # I didn't understand why the extra get() calls occurred, but they disappeared
+                            # when I added the `suppressReport` control variable.
+                            suppressReport = true
                             wrapped[propName] = propertyWrapResult.wrapped
+                            suppressReport = false
 
                             storeManager.addPropertyStore propName, propStoreManager.getOwnStore()
                             return propertyWrapResult.wrapped
@@ -55,7 +65,13 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
                         return currentValue
 
                     set: (newValue) ->
-                        reportGetSetObservation storeManager, OBSERVATION_CATEGORIES.CHANGED, propName, newValue
+                        unless suppressReport
+                            reportGetSetObservation(
+                                storeManager,
+                                OBSERVATION_CATEGORIES.CHANGED,
+                                propName,
+                                newValue
+                            )
                         logger.debug "set() called for '#{propName}', with new value #{newValue}"
                         obj[propName] = newValue
 
