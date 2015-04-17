@@ -3,8 +3,6 @@ _                           = require 'lodash'
 
 makeObservationGroup = (parentTickObj) ->
     group = {}
-    microTick = 0
-    macroTick = 0
 
     makeCollection = ->
         collection = {}
@@ -17,12 +15,9 @@ makeObservationGroup = (parentTickObj) ->
             for name, value of toAdd
                 collection[name] ?= []
                 collection[name].push {
-                    microTick
-                    macroTick
-                    parentTick: parentTickObj.parentTick
+                    tick: parentTickObj.tick
                     value
                 }
-                ++microTick
 
         return {get, add}
 
@@ -41,7 +36,7 @@ makeObservationGroup = (parentTickObj) ->
             data = groupChanges[value]
             if data?
                 group[value].add data
-        ++macroTick
+        parentTickObj.tick++
 
     return {getGroup, addGroup}
 

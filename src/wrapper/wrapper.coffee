@@ -48,7 +48,7 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
 
                         logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
                         if typeof currentValue is 'object' and not propStoreManager?
-                            propertyWrapResult = wrapProperties(currentValue, storeManager.getPropertyTick())
+                            propertyWrapResult = wrapProperties(currentValue, storeManager.getTickObj())
                             propStoreManager = propertyWrapResult.storeManager
 
                             # This resulted in calls to get() for all properties of `propertyWrapResult.wrapped`
