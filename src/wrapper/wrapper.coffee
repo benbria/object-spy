@@ -6,7 +6,7 @@ ObservationStoreManager     = require '../store/observationStoreManager'
 
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
-exports.wrapProperties = wrapProperties = (originalObj, parentTickObj) ->
+exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
     wrapped = {}
     storeManager = new ObservationStoreManager(parentTickObj)
 
