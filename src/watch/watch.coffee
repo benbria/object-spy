@@ -12,4 +12,5 @@ exports.watch = (obj) ->
     {wrapped, storeManager} = wrapper.wrapProperties obj, null
     result = {wrapped}
     result.getObservations = storeManager.getObservations
+    result.getObservationsPromise = storeManager.getObservationsPromise
     return result

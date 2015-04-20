@@ -1,2 +1,5 @@
+LogStyleReporter            = require './reporters/logStyleReporter'
+
 module.exports =
-    logStyle: require('./reporters/logStyleReporter')
+    logStyle: ->
+        return new LogStyleReporter
