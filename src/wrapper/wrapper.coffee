@@ -1,6 +1,5 @@
 _                           = require 'lodash'
 logger                      = require('../util/logger').getLogger()
-ObservationStore            = require '../store/observationStore'
 ObservationStoreManager     = require '../store/observationStoreManager'
 {OBSERVATION_CATEGORIES}    = require '../util/constants'
 
@@ -59,7 +58,7 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
                             wrapped[propName] = propertyWrapResult.wrapped
                             suppressReport = false
 
-                            storeManager.addPropertyStore propName, propStoreManager.getOwnStore()
+                            storeManager.addPropertyStore propName, propStoreManager
                             return propertyWrapResult.wrapped
 
                         return currentValue

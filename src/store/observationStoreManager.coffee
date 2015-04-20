@@ -6,20 +6,20 @@ class ObservationStoreManager
     constructor: (parentTickObj) ->
         tickObj = parentTickObj ? {tick: 0}
         ownStore = new ObservationStore(tickObj)
-        propertiesStores = {}
+        propertiesStoreManagers = {}
 
         @getTickObj = ->
             tickObj
 
-        @addPropertyStore = (key, observationStore) ->
-            propertiesStores[key] = observationStore
+        @addPropertyStore = (key, observationStoreManager) ->
+            propertiesStoreManagers[key] = observationStoreManager
 
         @addOwnObservations = (data) ->
             ownStore.add data
 
         @getObservationsPromise = getObservationsPromise = ->
-            keys = _.keys propertiesStores
-            allPropertyData = Promise.all(_.invoke(propertiesStores, 'get'))
+            keys = _.keys propertiesStoreManagers
+            allPropertyData = Promise.all(_.invoke(propertiesStoreManagers, 'getObservationsPromise'))
             allPropertyData.then (contents) ->
                 propertyData = _.reduce contents,
                     (result, storeData, index) ->
@@ -35,8 +35,5 @@ class ObservationStoreManager
             ).catch( (err) ->
                 cb err
             )
-
-        @getOwnStore = ->
-            ownStore
 
 module.exports = ObservationStoreManager
