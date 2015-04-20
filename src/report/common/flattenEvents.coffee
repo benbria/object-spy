@@ -1,12 +1,13 @@
 _                           = require 'lodash'
 {Promise}                   = require 'es6-promise'
 
-labelEventArray = (events, key, path) ->
+labelEventArray = (events, key, path, category) ->
     return new Promise((resolve, reject) ->
             labelledEvents = _.map events, (event) ->
                 labelledEvent = _.assign {}, event
                 labelledEvent.path = []
                 labelledEvent.path.unshift key, path...
+                labelledEvent.category = category
                 return labelledEvent
             resolve(labelledEvents)
         )
@@ -21,15 +22,15 @@ concatenateArrays = (arrays) ->
         resolve(allArray)
     )
 
-flattenCategoryData = (categoryData, path) ->
+flattenCategoryData = (categoryData, path, categoryName) ->
     allPromise = Promise.all _.map(categoryData, (value, key) ->
-        labelEventArray value, key, path
+        labelEventArray value, key, path, categoryName
     )
     allPromise.then concatenateArrays
 
 flattenObservationStoreData = (observationData, path) ->
-    allPromise = Promise.all _.map(observationData, (value) ->
-        flattenCategoryData value, path
+    allPromise = Promise.all _.map(observationData, (value, categoryName) ->
+        flattenCategoryData value, path, categoryName
     )
     allPromise = allPromise.then concatenateArrays
 
@@ -45,5 +46,5 @@ flattenObservationStoreManagerData = (observationData, path) ->
 # Converts observation store data
 # into a promise which resolves to an array of events
 # The original data is not modified
-observationDataToEventArray = (data) ->
+exports.observationDataToEventArray = (data) ->
     flattenObservationStoreManagerData data, []

@@ -1,1 +1,2 @@
-module.exports = require './watch/watch'
+exports.watch           = require './watch/watch'
+exports.reporters       = require './report'
