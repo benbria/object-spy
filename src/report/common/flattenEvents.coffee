@@ -6,7 +6,7 @@ labelEventArray = (events, key, path, category) ->
             labelledEvents = _.map events, (event) ->
                 labelledEvent = _.assign {}, event
                 labelledEvent.path = []
-                labelledEvent.path.unshift key, path...
+                labelledEvent.path.push path..., key
                 labelledEvent.category = category
                 return labelledEvent
             resolve(labelledEvents)
@@ -41,7 +41,8 @@ flattenObservationStoreManagerData = (observationData, path) ->
         else
             flattenObservationStoreData value, path.concat([key])
     promises.push flattenObservationStoreData(observationData.ownData, path)
-    Promise.all promises
+    allPromise = Promise.all promises
+    allPromise.then concatenateArrays
 
 # Converts observation store data
 # into a promise which resolves to an array of events
