@@ -1,5 +1,6 @@
-_                       = require 'lodash'
-ObservationStore        = require './observationStore'
+_                           = require 'lodash'
+{Promise}                   = require 'es6-promise'
+ObservationStore            = require './observationStore'
 
 class ObservationStoreManager
     constructor: (parentTickObj) ->
@@ -16,13 +17,24 @@ class ObservationStoreManager
         @addOwnObservations = (data) ->
             ownStore.add data
 
-        @getObservations = ->
-            propertyData = _.reduce propertiesStores,
-                (result, store, key) ->
-                    result[key] = store.get()
-                    return result
-                , {}
-            return { ownData: ownStore.get(), propertyData }
+        @getObservationsPromise = getObservationsPromise = ->
+            keys = _.keys propertiesStores
+            allPropertyData = Promise.all(_.invoke(propertiesStores, 'get'))
+            allPropertyData.then (contents) ->
+                propertyData = _.reduce contents,
+                    (result, storeData, index) ->
+                        result[keys[index]] = storeData
+                        return result
+                    , {}
+                ownStore.get().then (ownData) ->
+                    return { ownData, propertyData }
+
+        @getObservations = (cb) ->
+            getObservationsPromise().then( (data) ->
+                cb null, data
+            ).catch( (err) ->
+                cb err
+            )
 
         @getOwnStore = ->
             ownStore

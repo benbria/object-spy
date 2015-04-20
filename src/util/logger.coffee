@@ -20,7 +20,12 @@ exports.getLogger = ->
     return result
 
 exports.setLogger = (newLogger) ->
+    validateLogger newLogger
+    logger = newLogger
+
+validateLogger = (newLogger) ->
+    unless newLogger?
+        throw new Error "validateLogger() called on a null or undefined value"
     for name in loggerMethods
         unless typeof newLogger?[name] is 'function'
-            throw new Error "setLogger() called on object missing a '#{name}' function"
-    logger = newLogger
+            throw new Error "validateLogger() called on object missing a '#{name}' function"
