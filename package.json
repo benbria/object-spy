@@ -2,6 +2,11 @@
   "name": "object-spy",
   "version": "0.0.1",
   "description": "Examine the use of an object from inside of it",
+  "repository": {
+      "type": "git",
+      "url": "git://github.com/benbria/object-spy.git"
+  },
+  "homepage": "https://github.com/benbria/object-spy",
   "main": "./lib/index.js",
   "keywords": [
       "spy",
