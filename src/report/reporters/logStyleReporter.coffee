@@ -2,10 +2,11 @@
 _                           = require 'lodash'
 flattenEvents               = require '../common/flattenEvents'
 sortEvents                  = require '../common/sortEvents'
-formatEvents                = require '../common/formatEvents'
+textFormatting              = require '../common/textFormatting'
 Reporter                    = require '../reporter'
 
 FIELD_WIDTH = 10
+{TICK, EVENT_CATEGORY, PATH, VALUE} = textFormatting.FIELD_NAMES
 
 class LogStyleReporter extends Reporter
     constructor: ->
@@ -29,7 +30,7 @@ class LogStyleReporter extends Reporter
         pathFieldWidth = null
         promise = promise.then (events) ->
             return new Promise((resolve, reject) ->
-                pathFieldWidth = formatEvents.findMaximumPathLength(events) + 4
+                pathFieldWidth = textFormatting.findMaximumPathLength(events) + 4
                 resolve(events)
             )
 
@@ -38,8 +39,8 @@ class LogStyleReporter extends Reporter
                 stringEvents = _.map events, (event) ->
                     "#{_.padRight event.tick, FIELD_WIDTH}#{_.padRight event.category, FIELD_WIDTH}
                      #{_.padRight event.pathString, pathFieldWidth}#{event.value}"
-                stringEvents.unshift "#{_.padRight 'Tick', FIELD_WIDTH}#{_.padRight 'Event', FIELD_WIDTH}
-                 #{_.padRight 'Path', pathFieldWidth}(new) property value"
+                stringEvents.unshift "#{_.padRight TICK, FIELD_WIDTH}#{_.padRight EVENT_CATEGORY, FIELD_WIDTH}
+                 #{_.padRight PATH, pathFieldWidth}#{VALUE}"
                 resolve(stringEvents)
             )
 
