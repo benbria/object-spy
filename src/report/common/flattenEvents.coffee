@@ -7,6 +7,7 @@ labelEventArray = (events, key, path, category) ->
                 labelledEvent = _.assign {}, event
                 labelledEvent.path = []
                 labelledEvent.path.push path..., key
+                labelledEvent.pathString = labelledEvent.path.join('.')
                 labelledEvent.category = category
                 return labelledEvent
             resolve(labelledEvents)

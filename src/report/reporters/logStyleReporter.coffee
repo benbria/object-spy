@@ -4,6 +4,8 @@ flattenEvents               = require '../common/flattenEvents'
 sortEvents                  = require '../common/sortEvents'
 Reporter                    = require '../reporter'
 
+FIELD_WIDTH = 10
+
 class LogStyleReporter extends Reporter
     constructor: ->
 
@@ -13,7 +15,7 @@ class LogStyleReporter extends Reporter
     # ```
     _getReportAsStringArray: (data, options) ->
         options = _.defaults options, {ascendingByTick: true}
-        
+
         promise = flattenEvents.observationDataToEventArray data
         promise = promise.then (events) ->
             sortEvents.sortEventsByOrder events, [
@@ -21,11 +23,22 @@ class LogStyleReporter extends Reporter
             ], [
                 options.ascendingByTick, true, true
             ]
+
+        pathFieldWidth = null
+        promise = promise.then (events) ->
+            return new Promise((resolve, reject) ->
+                pathFieldWidthEvent = _.max events, (event) ->
+                    event.pathString.length
+                pathFieldWidth = pathFieldWidthEvent.pathString.length + 4
+                resolve(events)
+            )
         promise.then (events) ->
             return new Promise((resolve, reject) ->
                 stringEvents = _.map events, (event) ->
-                    "#{_.padRight event.tick, 10} #{_.padRight event.category, 10}
-                     #{event.path.join('.')} value #{event.value}"
+                    "#{_.padRight event.tick, FIELD_WIDTH}#{_.padRight event.category, FIELD_WIDTH}
+                     #{_.padRight event.pathString, pathFieldWidth}= #{event.value}"
+                stringEvents.unshift "#{_.padRight 'Tick', FIELD_WIDTH}#{_.padRight 'Event', FIELD_WIDTH}
+                 #{_.padRight 'Path', pathFieldWidth}  (new) property value"
                 resolve(stringEvents)
             )
 
