@@ -4,7 +4,7 @@ flattenEvents               = require '../common/flattenEvents'
 sortEvents                  = require '../common/sortEvents'
 formatEvents                = require '../common/formatEvents'
 Reporter                    = require '../reporter'
-constants                   = require '../util/constants'
+constants                   = require '../../util/constants'
 {concatenateArrays}         = require '../../util/util'
 
 {OBSERVATION_CATEGORIES, OBSERVATION_CATEGORIES_SORTED} = constants
@@ -45,12 +45,12 @@ eventTypeSortedToStringArray = (arrayNestedByEventType, pathFieldWidth) ->
     promise = Promise.all _.map arrayNestedByEventType, (value, index) ->
         return new Promise((resolve, reject) ->
             stringArray = _.map value.counts, ({count, pathString}) ->
-                "\t#{_.padRight pathString, pathFieldWidth}: #{count}"
-            stringArray.unshift "\t#{_.padRight 'Path', pathFieldWidth}  Count"
-            stringArray.unshift "Event type: #{value.category}"
+                "\t#{_.padRight pathString, pathFieldWidth}#{count}"
+            stringArray.unshift "\t#{_.padRight 'Path', pathFieldWidth}Count"
+            stringArray.unshift "Event: #{value.category}"
             resolve(stringArray)
         )
-    promise.then (nestedArray) -> concatenateArrays
+    promise.then concatenateArrays
 
 aggregateByPath = (events) ->
     return new Promise((resolve, reject) ->
@@ -80,11 +80,12 @@ pathSortedToStringArray = (arrayByPath) ->
     promise = Promise.all _.map arrayByPath, (value) ->
         return new Promise((resolve, reject) ->
             stringArray = _.map OBSERVATION_CATEGORIES_SORTED, (category) ->
-                "\t#{_.padRight category, FIELD_WIDTH}: #{value[category]}"
+                "\t#{_.padRight category, FIELD_WIDTH}#{value[category]}"
+            stringArray.unshift "\t#{_.padRight 'Event', FIELD_WIDTH}Count"
             stringArray.unshift "Path: #{value.pathString}"
             resolve(stringArray)
         )
-    promise.then (nestedArray) -> concatenateArrays
+    promise.then concatenateArrays
 
 class EventCountsReporter extends Reporter
     constructor: ->

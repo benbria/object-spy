@@ -37,9 +37,9 @@ class LogStyleReporter extends Reporter
             return new Promise((resolve, reject) ->
                 stringEvents = _.map events, (event) ->
                     "#{_.padRight event.tick, FIELD_WIDTH}#{_.padRight event.category, FIELD_WIDTH}
-                     #{_.padRight event.pathString, pathFieldWidth}= #{event.value}"
+                     #{_.padRight event.pathString, pathFieldWidth}#{event.value}"
                 stringEvents.unshift "#{_.padRight 'Tick', FIELD_WIDTH}#{_.padRight 'Event', FIELD_WIDTH}
-                 #{_.padRight 'Path', pathFieldWidth}  (new) property value"
+                 #{_.padRight 'Path', pathFieldWidth}(new) property value"
                 resolve(stringEvents)
             )
 
