@@ -29,10 +29,13 @@ aggregateByEventType = (events) ->
 
 # Converts results of `aggregateByEventType` to a nested array
 # with the proper ordering
-unpackAggregateByEventType = (aggregatedEvents) ->
+unpackAggregateByEventType = (aggregatedEvents, sortByPath) ->
     promise = Promise.all _.map aggregatedEvents, (events, category) ->
         return new Promise((resolve, reject) ->
-            sortedEvents = _.sortBy events, 'index'
+            sortedEvents = (if sortByPath
+                     _.sortBy events, 'index'
+                else
+                     _.sortByOrder events, ['count', 'index'], [false, true])
             resolve({counts: sortedEvents, category})
         )
     return promise.then (unpackedDisorderedEvents) ->
@@ -92,12 +95,17 @@ class EventCountsReporter extends Reporter
 
     # ```
     # options =
-    #     byEventType: [boolean] Sort events by event type first, then by property path.
-    #                  If false, sort by property path, then by event type.
+    #     byEventType: [boolean] Group events by event type first.
+    #                  If false, sort by property path, then group by event type.
     #                  Default = true
+    #     byEventTypeAndPath: [boolean] If `byEventType` is `true`, group by event type, then sort by
+    #                         count of events (descending), then sort by property path (ascending).
+    #                         Otherwise, group by event type, then sort by property path (ascending).
+    #                         If `byEventType` is `false`, `byEventTypeAndPath` is ignored.
+    #                         Default = true
     # ```
     _getReportAsStringArray: (data, options) ->
-        options = _.defaults options, {byEventType: true}
+        options = _.defaults options, {byEventType: true, byEventTypeAndPath: true}
 
         promise = flattenEvents.observationDataToEventArray data
         promise = promise.then sortEvents.sortEventsByPath
@@ -116,7 +124,7 @@ class EventCountsReporter extends Reporter
                 aggregateByPath events
         promise = promise.then (aggregatedEvents) ->
             if options.byEventType
-                unpackAggregateByEventType aggregatedEvents
+                unpackAggregateByEventType aggregatedEvents, options.byEventTypeAndPath
             else
                 unpackAggregateByPath aggregatedEvents
         promise = promise.then (unpackedEvents) ->
