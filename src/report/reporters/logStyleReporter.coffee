@@ -2,6 +2,7 @@
 _                           = require 'lodash'
 flattenEvents               = require '../common/flattenEvents'
 sortEvents                  = require '../common/sortEvents'
+formatEvents                = require '../common/formatEvents'
 Reporter                    = require '../reporter'
 
 FIELD_WIDTH = 10
@@ -12,6 +13,7 @@ class LogStyleReporter extends Reporter
     # ```
     # options =
     #     ascendingByTick: [boolean] Sort events ascending or descending by time
+    #                      Default = true
     # ```
     _getReportAsStringArray: (data, options) ->
         options = _.defaults options, {ascendingByTick: true}
@@ -27,11 +29,10 @@ class LogStyleReporter extends Reporter
         pathFieldWidth = null
         promise = promise.then (events) ->
             return new Promise((resolve, reject) ->
-                pathFieldWidthEvent = _.max events, (event) ->
-                    event.pathString.length
-                pathFieldWidth = pathFieldWidthEvent.pathString.length + 4
+                pathFieldWidth = formatEvents.findMaximumPathLength(events) + 4
                 resolve(events)
             )
+
         promise.then (events) ->
             return new Promise((resolve, reject) ->
                 stringEvents = _.map events, (event) ->

@@ -1,5 +1,6 @@
 _                           = require 'lodash'
 {Promise}                   = require 'es6-promise'
+{concatenateArrays}         = require '../../util/util'
 
 labelEventArray = (events, key, path, category) ->
     return new Promise((resolve, reject) ->
@@ -12,16 +13,6 @@ labelEventArray = (events, key, path, category) ->
                 return labelledEvent
             resolve(labelledEvents)
         )
-
-concatenateArrays = (arrays) ->
-    return new Promise((resolve, reject) ->
-        allArray = _.reduce arrays,
-            (result, value) ->
-                result.push value...
-                return result
-            , []
-        resolve(allArray)
-    )
 
 flattenCategoryData = (categoryData, path, categoryName) ->
     allPromise = Promise.all _.map(categoryData, (value, key) ->
