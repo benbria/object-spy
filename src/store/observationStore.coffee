@@ -1,4 +1,5 @@
 _                           = require 'lodash'
+{Promise}                   = require 'es6-promise'
 {OBSERVATION_CATEGORIES}    = require '../util/constants'
 
 makeObservationGroup = (parentTickObj) ->
@@ -8,7 +9,10 @@ makeObservationGroup = (parentTickObj) ->
         collection = {}
 
         get = ->
-            return _.cloneDeep collection
+            return new Promise((resolve, reject) ->
+                contents = _.cloneDeep collection
+                resolve(contents)
+                )
 
         add = (data) ->
             toAdd = _.cloneDeep data
@@ -25,11 +29,14 @@ makeObservationGroup = (parentTickObj) ->
         group[value] = makeCollection()
 
     getGroup = ->
-        groupData = _.reduce group,
-            (result, value, key) ->
-                result[key] = value.get()
-                return result
-            , {}
+        keys = _.keys group
+        allContents = Promise.all _.invoke(group, 'get')
+        allContents.then (contents) ->
+            _.reduce contents,
+                (result, value, index) ->
+                    result[keys[index]] = value
+                    return result
+                , {}
 
     addGroup = (groupChanges) ->
         for name, value of OBSERVATION_CATEGORIES

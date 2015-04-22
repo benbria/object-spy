@@ -1,30 +1,39 @@
-_                       = require 'lodash'
-ObservationStore        = require './observationStore'
+_                           = require 'lodash'
+{Promise}                   = require 'es6-promise'
+ObservationStore            = require './observationStore'
 
 class ObservationStoreManager
     constructor: (parentTickObj) ->
         tickObj = parentTickObj ? {tick: 0}
         ownStore = new ObservationStore(tickObj)
-        propertiesStores = {}
+        propertiesStoreManagers = {}
 
         @getTickObj = ->
             tickObj
 
-        @addPropertyStore = (key, observationStore) ->
-            propertiesStores[key] = observationStore
+        @addPropertyStore = (key, observationStoreManager) ->
+            propertiesStoreManagers[key] = observationStoreManager
 
         @addOwnObservations = (data) ->
             ownStore.add data
 
-        @getObservations = ->
-            propertyData = _.reduce propertiesStores,
-                (result, store, key) ->
-                    result[key] = store.get()
-                    return result
-                , {}
-            return { ownData: ownStore.get(), propertyData }
+        @getObservationsPromise = getObservationsPromise = ->
+            keys = _.keys propertiesStoreManagers
+            allPropertyData = Promise.all(_.invoke(propertiesStoreManagers, 'getObservationsPromise'))
+            allPropertyData.then (contents) ->
+                propertyData = _.reduce contents,
+                    (result, storeData, index) ->
+                        result[keys[index]] = storeData
+                        return result
+                    , {}
+                ownStore.get().then (ownData) ->
+                    return { ownData, propertyData }
 
-        @getOwnStore = ->
-            ownStore
+        @getObservations = (cb) ->
+            getObservationsPromise().then( (data) ->
+                cb null, data
+            ).catch( (err) ->
+                cb err
+            )
 
 module.exports = ObservationStoreManager
