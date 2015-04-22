@@ -37,7 +37,8 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
                     )
 
                 logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
-                if ((typeof currentValue is 'object') or (typeof currentValue is 'function')) and not propStoreManager? and !(descriptor.get?)
+                if ((typeof currentValue is 'object') or (typeof currentValue is 'function')) and !(propStoreManager?) and !(descriptor.get?)
+                    logger.debug "Replacing value under key '#{propName}' with a wrapper object"
                     propertyWrapResult = wrapProperties(currentValue, storeManager.getTickObj())
                     propStoreManager = propertyWrapResult.storeManager
 
