@@ -31,7 +31,7 @@ aggregateByEventType = (events) ->
 # Converts results of `aggregateByEventType` to a nested array
 # with the proper ordering
 unpackAggregateByEventType = (aggregatedEvents, sortByPath) ->
-    promise = Promise.all _.map aggregatedEvents, (events, category) ->
+    Promise.all(_.map aggregatedEvents, (events, category) ->
         return new Promise((resolve, reject) ->
             sortedEvents = (if sortByPath
                      _.sortBy events, 'index'
@@ -39,14 +39,14 @@ unpackAggregateByEventType = (aggregatedEvents, sortByPath) ->
                      _.sortByOrder events, ['count', 'index'], [false, true])
             resolve({counts: sortedEvents, category})
         )
-    return promise.then (unpackedDisorderedEvents) ->
+    ).then (unpackedDisorderedEvents) ->
         nestedArray = _.map OBSERVATION_CATEGORIES_SORTED, (category) ->
             _.find unpackedDisorderedEvents, (value) ->
                 value.category is category
         return nestedArray
 
 eventTypeSortedToStringArray = (arrayNestedByEventType, pathFieldWidth) ->
-    promise = Promise.all _.map arrayNestedByEventType, (value, index) ->
+    Promise.all(_.map arrayNestedByEventType, (value, index) ->
         return new Promise((resolve, reject) ->
             stringArray = _.map value.counts, ({count, pathString}) ->
                 "\t#{_.padRight pathString, pathFieldWidth}#{count}"
@@ -54,7 +54,7 @@ eventTypeSortedToStringArray = (arrayNestedByEventType, pathFieldWidth) ->
             stringArray.unshift "Event: #{value.category}"
             resolve(stringArray)
         )
-    promise.then concatenateArrays
+    ).then concatenateArrays
 
 aggregateByPath = (events) ->
     return new Promise((resolve, reject) ->
@@ -81,7 +81,7 @@ unpackAggregateByPath = (aggregatedEvents) ->
     )
 
 pathSortedToStringArray = (arrayByPath) ->
-    promise = Promise.all _.map arrayByPath, (value) ->
+    Promise.all(_.map arrayByPath, (value) ->
         return new Promise((resolve, reject) ->
             stringArray = _.map OBSERVATION_CATEGORIES_SORTED, (category) ->
                 "\t#{_.padRight category, FIELD_WIDTH}#{value[category]}"
@@ -89,7 +89,7 @@ pathSortedToStringArray = (arrayByPath) ->
             stringArray.unshift "#{PATH}: #{value.pathString}"
             resolve(stringArray)
         )
-    promise.then concatenateArrays
+    ).then concatenateArrays
 
 class EventCountsReporter extends Reporter
     constructor: ->
@@ -107,31 +107,35 @@ class EventCountsReporter extends Reporter
     # ```
     _getReportAsStringArray: (data, options) ->
         options = _.defaults options, {byEventType: true, byEventTypeAndPath: true}
-
-        promise = flattenEvents.observationDataToEventArray data
-        promise = promise.then sortEvents.sortEventsByPath
         pathFieldWidth = null
-        if options.byEventType
-            promise = promise.then (events) ->
+
+        flattenEvents.observationDataToEventArray(
+            data
+        ).then(
+            sortEvents.sortEventsByPath
+        ).then( (events) ->
+            if options.byEventType
                 return new Promise((resolve, reject) ->
                     pathFieldWidth = textFormatting.findMaximumPathLength(events) + 4
                     resolve(events)
                 )
-
-        promise = promise.then (events) ->
+            else
+                return events
+        ).then( (events) ->
             if options.byEventType
                 aggregateByEventType events
             else
                 aggregateByPath events
-        promise = promise.then (aggregatedEvents) ->
+        ).then( (aggregatedEvents) ->
             if options.byEventType
                 unpackAggregateByEventType aggregatedEvents, options.byEventTypeAndPath
             else
                 unpackAggregateByPath aggregatedEvents
-        promise = promise.then (unpackedEvents) ->
+        ).then( (unpackedEvents) ->
             if options.byEventType
                 eventTypeSortedToStringArray unpackedEvents, pathFieldWidth
             else
                 pathSortedToStringArray unpackedEvents
+        )
 
 module.exports = EventCountsReporter

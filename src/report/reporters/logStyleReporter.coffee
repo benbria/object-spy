@@ -18,23 +18,22 @@ class LogStyleReporter extends Reporter
     # ```
     _getReportAsStringArray: (data, options) ->
         options = _.defaults options, {ascendingByTick: true}
+        pathFieldWidth = null
 
-        promise = flattenEvents.observationDataToEventArray data
-        promise = promise.then (events) ->
+        flattenEvents.observationDataToEventArray(
+            data
+        ).then( (events) ->
             sortEvents.sortEventsByOrder events, [
                 'tick', 'path', 'category'
             ], [
                 options.ascendingByTick, true, true
             ]
-
-        pathFieldWidth = null
-        promise = promise.then (events) ->
+        ).then( (events) ->
             return new Promise((resolve, reject) ->
                 pathFieldWidth = textFormatting.findMaximumPathLength(events) + 4
                 resolve(events)
             )
-
-        promise.then (events) ->
+        ).then( (events) ->
             return new Promise((resolve, reject) ->
                 stringEvents = _.map events, (event) ->
                     "#{_.padRight event.tick, FIELD_WIDTH}#{_.padRight event.category, FIELD_WIDTH}
@@ -43,5 +42,6 @@ class LogStyleReporter extends Reporter
                  #{_.padRight PATH, pathFieldWidth}#{VALUE}"
                 resolve(stringEvents)
             )
+        )
 
 module.exports = LogStyleReporter
