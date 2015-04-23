@@ -2,6 +2,7 @@ _                           = require 'lodash'
 logger                      = require('../util/logger').getLogger()
 ObservationStoreManager     = require '../store/observationStoreManager'
 {OBSERVATION_CATEGORIES}    = require '../util/constants'
+util                        = require '../util/util'
 
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
@@ -85,10 +86,8 @@ makeAccessorUtilities = (descriptor, propName) ->
             value
         getEventCategory = OBSERVATION_CATEGORIES.READ
         wrapOnRetrievalTest = (currentValue) ->
-            if currentValue?
-                (typeof currentValue is 'object') or (typeof currentValue is 'function')
-            else
-                false
+            type = util.customTypeof currentValue
+            (type is 'object') or (type is 'function')
 
     if descriptor.set?
         setValue = descriptor.set

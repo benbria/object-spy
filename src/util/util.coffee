@@ -10,3 +10,9 @@ exports.concatenateArrays = (arrays) ->
             , []
         resolve(allArray)
     )
+
+exports.customTypeof = (value) ->
+    if value isnt null
+        typeof value
+    else
+        'null'
