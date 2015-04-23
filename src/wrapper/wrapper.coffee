@@ -17,8 +17,8 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
 
 wrapProperty = (obj, wrapped, propName, storeManager) ->
     descriptor = Object.getOwnPropertyDescriptor obj, propName
-    {getValue, setValue} = makeInternalGetterAndSetter descriptor, propName
-    propStoreManager = null
+    {getValue, setValue, wrapOnRetrievalTest} = makeAccessorUtilities descriptor, propName
+    isWrapped = null
 
     wrapperDescriptor =
         configurable: descriptor.configurable
@@ -34,13 +34,13 @@ wrapProperty = (obj, wrapped, propName, storeManager) ->
             )
 
             logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
-            if ((typeof currentValue is 'object') or (typeof currentValue is 'function')) and !(propStoreManager?) and !(descriptor.get?)
+            if !isWrapped and wrapOnRetrievalTest(currentValue)
                 logger.debug "Replacing value under key '#{propName}' with a wrapper object"
                 propertyWrapResult = wrapProperties(currentValue, storeManager.getTickObj())
-                propStoreManager = propertyWrapResult.storeManager
+                isWrapped = true
                 currentValue = propertyWrapResult.wrapped
                 setValue(currentValue)
-                storeManager.addPropertyStore propName, propStoreManager
+                storeManager.addPropertyStore propName, propertyWrapResult.storeManager
 
             return currentValue
 
@@ -56,8 +56,11 @@ wrapProperty = (obj, wrapped, propName, storeManager) ->
 
     Object.defineProperty wrapped, propName, wrapperDescriptor
 
-makeInternalGetterAndSetter = (descriptor, propName) ->
+makeAccessorUtilities = (descriptor, propName) ->
     value = null
+
+    wrapOnRetrievalTest = (currentValue) ->
+        false
 
     if descriptor.get?
         logger.warn "The descriptor for the property under key '#{propName}' has a get() function.
@@ -72,6 +75,11 @@ makeInternalGetterAndSetter = (descriptor, propName) ->
         value = descriptor.value
         getValue = ->
             value
+        wrapOnRetrievalTest = (currentValue) ->
+            if currentValue?
+                (typeof currentValue is 'object') or (typeof currentValue is 'function')
+            else
+                false
 
     if descriptor.set?
         setValue = descriptor.set
@@ -85,7 +93,7 @@ makeInternalGetterAndSetter = (descriptor, propName) ->
         setValue = (newValue) ->
             logger.debug "set() called for '#{propName}', but property is not writable."
 
-    return {getValue, setValue}
+    return {getValue, setValue, wrapOnRetrievalTest}
 
 reportGetSetObservation = (storeManager, category, key, value) ->
     observation = {}
