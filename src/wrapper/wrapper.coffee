@@ -17,7 +17,13 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
 
 wrapProperty = (obj, wrapped, propName, storeManager) ->
     descriptor = Object.getOwnPropertyDescriptor obj, propName
-    {getValue, setValue, wrapOnRetrievalTest} = makeAccessorUtilities descriptor, propName
+    {
+        getValue
+        setValue
+        wrapOnRetrievalTest
+        getEventCategory
+        setEventCategory
+    } = makeAccessorUtilities descriptor, propName
     isWrapped = null
 
     wrapperDescriptor =
@@ -28,7 +34,7 @@ wrapProperty = (obj, wrapped, propName, storeManager) ->
             currentValue = getValue()
             reportGetSetObservation(
                 storeManager,
-                OBSERVATION_CATEGORIES.ACCESSED,
+                getEventCategory,
                 propName,
                 currentValue
             )
@@ -47,7 +53,7 @@ wrapProperty = (obj, wrapped, propName, storeManager) ->
         set: (newValue) ->
             reportGetSetObservation(
                 storeManager,
-                OBSERVATION_CATEGORIES.CHANGED,
+                setEventCategory,
                 propName,
                 newValue
             )
@@ -67,14 +73,17 @@ makeAccessorUtilities = (descriptor, propName) ->
             The values that the get() function returns
             will not be wrapped when returned, because they are not part of the object itself."
         getValue = descriptor.get
+        getEventCategory = OBSERVATION_CATEGORIES.GET
     else if descriptor.set?
         getValue = ->
             logger.debug "get() called for '#{propName}', but property has no getter."
             return undefined
+        getEventCategory = OBSERVATION_CATEGORIES.GET_ATTEMPT
     else
         value = descriptor.value
         getValue = ->
             value
+        getEventCategory = OBSERVATION_CATEGORIES.READ
         wrapOnRetrievalTest = (currentValue) ->
             if currentValue?
                 (typeof currentValue is 'object') or (typeof currentValue is 'function')
@@ -83,17 +92,27 @@ makeAccessorUtilities = (descriptor, propName) ->
 
     if descriptor.set?
         setValue = descriptor.set
+        setEventCategory = OBSERVATION_CATEGORIES.SET
     else if descriptor.get?
         setValue = (newValue) ->
             logger.debug "set() called for '#{propName}', but property has no setter."
+        setEventCategory = OBSERVATION_CATEGORIES.SET_ATTEMPT
     else if descriptor.writable
         setValue = (newValue) ->
             value = newValue
+        setEventCategory = OBSERVATION_CATEGORIES.WRITE
     else
         setValue = (newValue) ->
             logger.debug "set() called for '#{propName}', but property is not writable."
+        setEventCategory = OBSERVATION_CATEGORIES.WRITE_ATTEMPT
 
-    return {getValue, setValue, wrapOnRetrievalTest}
+    return {
+        getValue
+        setValue
+        wrapOnRetrievalTest
+        getEventCategory
+        setEventCategory
+    }
 
 reportGetSetObservation = (storeManager, category, key, value) ->
     observation = {}

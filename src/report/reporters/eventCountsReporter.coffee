@@ -10,7 +10,7 @@ constants                   = require '../../util/constants'
 {OBSERVATION_CATEGORIES, OBSERVATION_CATEGORIES_SORTED} = constants
 {EVENT_CATEGORY, PATH, COUNT} = textFormatting.FIELD_NAMES
 
-FIELD_WIDTH = 10
+FIELD_WIDTH = 22
 
 aggregateByEventType = (events) ->
     return new Promise((resolve, reject) ->
