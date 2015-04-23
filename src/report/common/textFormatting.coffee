@@ -9,5 +9,6 @@ exports.FIELD_NAMES =
     TICK: 'Tick'
     EVENT_CATEGORY: 'Event'
     PATH: 'Path'
-    VALUE: '(new) property value'
+    VALUE_TYPE: 'Value type'
+    VALUE_VALUE: '(new) value (if stored)'
     COUNT: 'Count'

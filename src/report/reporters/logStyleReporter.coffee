@@ -5,8 +5,9 @@ sortEvents                  = require '../common/sortEvents'
 textFormatting              = require '../common/textFormatting'
 Reporter                    = require '../reporter'
 
-FIELD_WIDTH = 10
-{TICK, EVENT_CATEGORY, PATH, VALUE} = textFormatting.FIELD_NAMES
+LARGE_FIELD_WIDTH = 22
+SMALL_FIELD_WIDTH = 12
+{TICK, EVENT_CATEGORY, PATH, VALUE_TYPE, VALUE_VALUE} = textFormatting.FIELD_NAMES
 
 class LogStyleReporter extends Reporter
     constructor: ->
@@ -36,10 +37,18 @@ class LogStyleReporter extends Reporter
         ).then( (events) ->
             return new Promise((resolve, reject) ->
                 stringEvents = _.map events, (event) ->
-                    "#{_.padRight event.tick, FIELD_WIDTH}#{_.padRight event.category, FIELD_WIDTH}
-                     #{_.padRight event.pathString, pathFieldWidth}#{event.value}"
-                stringEvents.unshift "#{_.padRight TICK, FIELD_WIDTH}#{_.padRight EVENT_CATEGORY, FIELD_WIDTH}
-                 #{_.padRight PATH, pathFieldWidth}#{VALUE}"
+                    stringEvent = "#{_.padRight event.tick, SMALL_FIELD_WIDTH}\
+                    #{_.padRight event.category, LARGE_FIELD_WIDTH}\
+                    #{_.padRight event.pathString, pathFieldWidth}\
+                    #{_.padRight event.value.type, SMALL_FIELD_WIDTH}"
+                    if event.value.valueIsStored
+                        stringEvent += "#{event.value.value}"
+                    return stringEvent
+                stringEvents.unshift "#{_.padRight TICK, SMALL_FIELD_WIDTH}\
+                    #{_.padRight EVENT_CATEGORY, LARGE_FIELD_WIDTH}\
+                    #{_.padRight PATH, pathFieldWidth}\
+                    #{_.padRight VALUE_TYPE, SMALL_FIELD_WIDTH}\
+                    #{VALUE_VALUE}"
                 resolve(stringEvents)
             )
         )

@@ -10,7 +10,7 @@ constants                   = require '../../util/constants'
 {OBSERVATION_CATEGORIES, OBSERVATION_CATEGORIES_SORTED} = constants
 {EVENT_CATEGORY, PATH, COUNT} = textFormatting.FIELD_NAMES
 
-FIELD_WIDTH = 10
+FIELD_WIDTH = 22
 
 aggregateByEventType = (events) ->
     return new Promise((resolve, reject) ->
@@ -30,7 +30,7 @@ aggregateByEventType = (events) ->
 
 # Converts results of `aggregateByEventType` to a nested array
 # with the proper ordering
-unpackAggregateByEventType = (aggregatedEvents, sortByPath) ->
+unpackAggregateByEventType = (aggregatedEvents, sortByPath, hideZeroCounts) ->
     Promise.all(_.map aggregatedEvents, (events, category) ->
         return new Promise((resolve, reject) ->
             sortedEvents = (if sortByPath
@@ -43,6 +43,9 @@ unpackAggregateByEventType = (aggregatedEvents, sortByPath) ->
         nestedArray = _.map OBSERVATION_CATEGORIES_SORTED, (category) ->
             _.find unpackedDisorderedEvents, (value) ->
                 value.category is category
+        if hideZeroCounts
+            nestedArray = _.reject nestedArray, (subObj) ->
+                _.isEmpty subObj.counts
         return nestedArray
 
 eventTypeSortedToStringArray = (arrayNestedByEventType, pathFieldWidth) ->
@@ -80,11 +83,14 @@ unpackAggregateByPath = (aggregatedEvents) ->
         resolve(sortedByPath)
     )
 
-pathSortedToStringArray = (arrayByPath) ->
+pathSortedToStringArray = (arrayByPath, hideZeroCounts) ->
     Promise.all(_.map arrayByPath, (value) ->
         return new Promise((resolve, reject) ->
-            stringArray = _.map OBSERVATION_CATEGORIES_SORTED, (category) ->
-                "\t#{_.padRight category, FIELD_WIDTH}#{value[category]}"
+            stringArray = []
+            _.forEach OBSERVATION_CATEGORIES_SORTED, (category) ->
+                count = value[category]
+                unless hideZeroCounts and count is 0
+                    stringArray.push "\t#{_.padRight category, FIELD_WIDTH}#{count}"
             stringArray.unshift "\t#{_.padRight EVENT_CATEGORY, FIELD_WIDTH}#{COUNT}"
             stringArray.unshift "#{PATH}: #{value.pathString}"
             resolve(stringArray)
@@ -104,9 +110,18 @@ class EventCountsReporter extends Reporter
     #                         Otherwise, group by event type, then sort by property path (ascending).
     #                         If `byEventType` is `false`, `byEventTypeAndPath` is ignored.
     #                         Default = true
+    #     hideZeroCounts: [boolean] If `byEventType` is `true`, do not output lines for event types
+    #                     under which there are no events.
+    #                     If `byEventType` is `false`, do not output lines for zero
+    #                     counts of events under a given property path.
+    #                     Default = true
     # ```
     _getReportAsStringArray: (data, options) ->
-        options = _.defaults options, {byEventType: true, byEventTypeAndPath: true}
+        options = _.defaults options, {
+            byEventType: true
+            byEventTypeAndPath: true
+            hideZeroCounts: true
+        }
         pathFieldWidth = null
 
         flattenEvents.observationDataToEventArray(
@@ -128,14 +143,14 @@ class EventCountsReporter extends Reporter
                 aggregateByPath events
         ).then( (aggregatedEvents) ->
             if options.byEventType
-                unpackAggregateByEventType aggregatedEvents, options.byEventTypeAndPath
+                unpackAggregateByEventType aggregatedEvents, options.byEventTypeAndPath, options.hideZeroCounts
             else
                 unpackAggregateByPath aggregatedEvents
         ).then( (unpackedEvents) ->
             if options.byEventType
                 eventTypeSortedToStringArray unpackedEvents, pathFieldWidth
             else
-                pathSortedToStringArray unpackedEvents
+                pathSortedToStringArray unpackedEvents, options.hideZeroCounts
         )
 
 module.exports = EventCountsReporter

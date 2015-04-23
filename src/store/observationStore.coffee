@@ -1,32 +1,37 @@
 _                           = require 'lodash'
 {Promise}                   = require 'es6-promise'
 {OBSERVATION_CATEGORIES}    = require '../util/constants'
+util                        = require '../util/util'
 
 makeObservationGroup = (parentTickObj) ->
     group = {}
 
-    makeCollection = ->
+    makeCollection = (categoryName) ->
         collection = {}
 
         get = ->
             return new Promise((resolve, reject) ->
                 contents = _.cloneDeep collection
                 resolve(contents)
-                )
+            )
 
         add = (data) ->
-            toAdd = _.cloneDeep data
-            for name, value of toAdd
+            for name, value of data
+                type = util.customTypeof value
+                valueWrapper = {type}
+                valueWrapper.valueIsStored = shouldStoreValue(categoryName, value)
+                if valueWrapper.valueIsStored
+                    valueWrapper.value = value
                 collection[name] ?= []
                 collection[name].push {
                     tick: parentTickObj.tick
-                    value
+                    value: valueWrapper
                 }
 
         return {get, add}
 
     for name, value of OBSERVATION_CATEGORIES
-        group[value] = makeCollection()
+        group[value] = makeCollection(value)
 
     getGroup = ->
         keys = _.keys group
@@ -46,6 +51,15 @@ makeObservationGroup = (parentTickObj) ->
         parentTickObj.tick++
 
     return {getGroup, addGroup}
+
+# This function prevents calls to wrapper accessor functions
+# that result in additional observations.
+shouldStoreValue = (category, value) ->
+    unless (category is OBSERVATION_CATEGORIES.REMOVED) or (category is OBSERVATION_CATEGORIES.READ)
+        true
+    else
+        type = util.customTypeof value
+        (type isnt 'function') and (type isnt 'object')
 
 class ObservationStore
     constructor: (parentTickObj) ->
