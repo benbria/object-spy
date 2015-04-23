@@ -15,12 +15,15 @@ makeObservationGroup = (parentTickObj) ->
                 )
 
         add = (data) ->
-            toAdd = _.cloneDeep data
-            for name, value of toAdd
+            for name, value of data
+                type = typeof value
+                valueWrapper = {type}
+                unless (type is 'function') or (type is 'object')
+                    valueWrapper.value = value
                 collection[name] ?= []
                 collection[name].push {
                     tick: parentTickObj.tick
-                    value
+                    value: valueWrapper
                 }
 
         return {get, add}
