@@ -55,9 +55,9 @@ makeObservationGroup = (parentTickObj) ->
 # This function prevents calls to wrapper accessor functions
 # that result in additional observations.
 shouldStoreValue = (category, value) ->
-    if (category isnt OBSERVATION_CATEGORIES.REMOVED) or (category isnt OBSERVATION_CATEGORIES.READ)
+    unless (category is OBSERVATION_CATEGORIES.REMOVED) or (category is OBSERVATION_CATEGORIES.READ)
         true
-    else if value?
+    else
         type = util.customTypeof value
         (type isnt 'function') and (type isnt 'object')
 

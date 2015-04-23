@@ -37,11 +37,13 @@ class LogStyleReporter extends Reporter
         ).then( (events) ->
             return new Promise((resolve, reject) ->
                 stringEvents = _.map events, (event) ->
-                    "#{_.padRight event.tick, SMALL_FIELD_WIDTH}\
-                     #{_.padRight event.category, LARGE_FIELD_WIDTH}\
-                     #{_.padRight event.pathString, pathFieldWidth}\
-                     #{_.padRight event.value.type, SMALL_FIELD_WIDTH}\
-                     #{event.value.value}"
+                    stringEvent = "#{_.padRight event.tick, SMALL_FIELD_WIDTH}\
+                    #{_.padRight event.category, LARGE_FIELD_WIDTH}\
+                    #{_.padRight event.pathString, pathFieldWidth}\
+                    #{_.padRight event.value.type, SMALL_FIELD_WIDTH}"
+                    if event.value.valueIsStored
+                        stringEvent += "#{event.value.value}"
+                    return stringEvent
                 stringEvents.unshift "#{_.padRight TICK, SMALL_FIELD_WIDTH}\
                     #{_.padRight EVENT_CATEGORY, LARGE_FIELD_WIDTH}\
                     #{_.padRight PATH, pathFieldWidth}\
