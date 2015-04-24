@@ -1,3 +1,5 @@
+util                        = require '../util/util'
+
 loggerMethods = [
     "debug", "info", "warn", "error"
 ]
@@ -27,5 +29,5 @@ validateLogger = (newLogger) ->
     unless newLogger?
         throw new Error "validateLogger() called on a null or undefined value"
     for name in loggerMethods
-        unless typeof newLogger?[name] is 'function'
+        unless util.customTypeof(newLogger?[name]) is 'function'
             throw new Error "validateLogger() called on object missing a '#{name}' function"
