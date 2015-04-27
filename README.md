@@ -9,7 +9,7 @@ In the process, find out what the object looks like to its clients.
 
 Determine the format of input data expected by some component.
 (Output data can be analyzed as well, but not as easily
-until [this issue](../issues/8) is addressed.)
+until [this issue](benbria/object-spy/issues/8) is addressed.)
 
 #### Mocking objects
 
