@@ -25,7 +25,7 @@ Determine how much of an object is actually ever accessed.
 the intention is to provide an automated tool, as described
 [here](../../issues/16))
 
-#### Investigating performance
+#### Investigating performance issues
 
 Count the number of times that the various properties
 of an object are used by client code.
@@ -147,6 +147,60 @@ Returns an object with the following properties
   where `data` is the set of observations collected from `wrapped` to date.
 - `getObservationsPromise()`: Returns a promise with the same effect as
   `getObservations()`
+
+## Limitations
+
+The following caveats are not covered by GitHub [issues](../../issues),
+but arise from design decisions.
+
+#### Objects can be wrapped multiple times
+
+The library does not check if an object is already a spy before
+constructing a spy for it. In order to prevent property name conflicts,
+there are no hidden properties stored in a spy object
+that indicate that it is a spy.
+
+#### Circular references are not detected
+
+Spy objects provide access to spies rather than return
+non-primitive properties of objects directly to the client code.
+While spies will check if a given property has already been accessed,
+to avoid wrapping its value again, they will not check if an object
+has previously been accessed via a different property path
+before wrapping it.
+
+Given that values are lazily-wrapped, circular references
+do not result in stack overflows. However, they will result in bugs
+such as the following:
+
+```CoffeeScript
+objectSpy = require 'object-spy'
+
+obj = {}
+obj.obj = obj
+
+console.log "obj.obj == obj: ", obj.obj == obj # True
+
+# Find out how the object is used directly
+# (this is destructuring assignment syntax)
+{wrapped: spy} = objectSpy.watch obj
+
+console.log "spy.obj == spy: ", spy.obj == spy # False
+```
+
+As circular references are probably quite rare,
+the performance impact of checking for them was thought
+to be unwarranted.
+
+#### Spies cannot observe existing bindings
+
+Any references to the original object's properties that were created
+before the spy object circumvent the wrapper code
+and are therefore unobservable. This includes methods of an object that change object's state.
+
+A partial solution for this problem would be to use [`Object.observe()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/observe)
+to recursively track changes to the entire object. Unfortunately, `Object.observe()`
+does not report property accesses; It only outputs changes.
 
 ## Further reading
 
