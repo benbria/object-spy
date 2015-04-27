@@ -13,6 +13,10 @@ exports.concatenateArrays = (arrays) ->
 
 exports.customTypeof = (value) ->
     if value isnt null
-        typeof value
+        type = typeof value
+        if type is 'number' and _.isNaN(value)
+            type = 'NaN'
     else
-        'null'
+        type = 'null'
+
+    return type
