@@ -5,30 +5,33 @@ In the process, find out what the object looks like to its clients.
 
 ## Suggested uses
 
-#### Documentation
+#### Assisting with documentation
 
 Determine the format of input data expected by some component.
-(Output data can be analyzed as well, but with more limitations
+
+(Output data can be analyzed as well, but with many limitations
 until [this issue](../../issues/8) is addressed.)
 
 #### Mocking objects
 
 Run the code to be tested with a spy object,
-and check what properties of the spy were used.
-This assists with the process of writing mock object literals in test code,
-speeding it up and leading to simpler test code.
+and check what properties of the spy were used,
+in order to quickly write mock object literals in test code.
 
 #### Discovering dead code
 
 Determine how much of an object is actually ever accessed.
+
 (This is possible by inspection currently, but
 the intention is to provide an automated tool, as described
-[here](../../issues/16))
+[here](../../issues/16).)
 
 #### Investigating performance issues
 
 Count the number of times that the various properties
-of an object are used by client code.
+of an object are used by client code and assess,
+for example, if the paths of frequently used properties
+are overly long.
 
 ## Usage
 
@@ -79,7 +82,8 @@ processObj = (obj) ->
 # Find out how the object is used directly
 # (this is destructuring assignment syntax)
 {wrapped: spy, getObservationsPromise} = objectSpy.watch obj
-# There is an `getObservations`
+# There is also a `getObservations` method
+# which takes a callback, instead of returning a promise.
 processObj spy
 
 # Format usage data as a table of sequential events
@@ -139,10 +143,13 @@ Redirects the logging output to the `newLogger` object,
 provided that the object has all methods listed in `src/util/logger.coffee`.
 Otherwise, throws an exception.
 
+Note that the logging is global to the library,
+and is not customizable on a per-spy basis.
+
 #### `watch(obj)`
 Returns an object with the following properties
-- `wrapped`: A spy which can be substituted for the `obj` argument
-  to collect usage data.
+- `wrapped`: A spy which can be substituted in client code
+  for the `obj` argument, to collect usage data.
 - `getObservations(cb)`: Calls the callback `cb` with `err` and `data` arguments,
   where `data` is the set of observations collected from `wrapped` to date.
 - `getObservationsPromise()`: Returns a promise with the same effect as
@@ -181,8 +188,6 @@ obj.obj = obj
 
 console.log "obj.obj == obj: ", obj.obj == obj # True
 
-# Find out how the object is used directly
-# (this is destructuring assignment syntax)
 {wrapped: spy} = objectSpy.watch obj
 
 console.log "spy.obj == spy: ", spy.obj == spy # False
@@ -196,9 +201,12 @@ to be unwarranted.
 
 Any references to the original object's properties that were created
 before the spy object circumvent the wrapper code
-and are therefore unobservable. This includes methods of an object that change object's state.
+and are therefore unobservable.
+This includes methods of an object that change the object's state.
 
-A partial solution for this problem would be to use [`Object.observe()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/observe)
+A partial solution for this problem would be to use a library providing
+an enhanced version of
+[`Object.observe()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/observe)
 to recursively track changes to the entire object. Unfortunately, `Object.observe()`
 does not report property accesses; It only outputs changes.
 
