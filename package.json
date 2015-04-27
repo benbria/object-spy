@@ -33,11 +33,12 @@
   "devDependencies": {
     "coffee-script": "^1.9.1",
     "mocha": "^2.2.4",
-    "should": "^5.2.0"
+    "chai": "^2.3.0"
   },
   "scripts": {
     "build": "coffee -c -o lib src",
     "prepublish": "coffee -c -o lib src && mocha test",
-    "test": "mocha test"
+    "test": "mocha test",
+    "clean": "rm -rf ./lib ./node_modules"
   }
 }
