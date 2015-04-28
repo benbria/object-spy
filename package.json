@@ -1,7 +1,7 @@
 {
   "name": "object-spy",
   "version": "0.0.1",
-  "description": "Examine the use of an object from inside of it",
+  "description": "Examine the use of an object by substituting it with a spy object",
   "repository": {
       "type": "git",
       "url": "git://github.com/benbria/object-spy.git"
