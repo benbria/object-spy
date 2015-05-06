@@ -13,6 +13,7 @@ exports.watch = (obj) ->
            console.log changes
 
         console.log 'Sanity check'
+        obj.hi = 5 # ADDED (should output to console)
 
         type = util.customTypeof obj
 
