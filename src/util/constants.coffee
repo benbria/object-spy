@@ -4,6 +4,7 @@ exports.OBSERVATION_CATEGORIES = OBSERVATION_CATEGORIES =
     # Not yet implemented
     # To be used to denote the addition of a property
     # ADDED: 'added'
+    #
     # Taken into account in `src/store/observationStore.coffee`,
     # but not yet implemented in wrapper code.
     REMOVED: 'removed'
