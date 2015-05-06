@@ -21,14 +21,17 @@ exports.OBSERVATION_CATEGORIES = OBSERVATION_CATEGORIES =
     WRITE: 'write'
     # Attempt to write to a data property that is not writable
     WRITE_ATTEMPT: 'write (not writable)'
+    #
     # Not yet implemented
     # Part of the specification of Object.observe(), but not mentioned in
     # the README of `observe-js` (https://github.com/Polymer/observe-js)
     # RECONFIGURE: 'reconfigured'
+    #
     # Not yet implemented
     # Part of the specification of Object.observe(), but not mentioned in
     # the README of `observe-js` (https://github.com/Polymer/observe-js)
     # SET_PROTOTYPE: 'setPrototype'
+    #
     # Not yet implemented
     # Part of the specification of Object.observe(), but not mentioned in
     # the README of `observe-js` (https://github.com/Polymer/observe-js)
