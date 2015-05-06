@@ -1,6 +1,7 @@
 wrapper                     = require '../wrapper/wrapper'
 logger                      = require('../util/logger').getLogger()
 util                        = require '../util/util'
+observe                     = require 'object.observe'
 
 exports.watch = (obj) ->
     unless obj?
