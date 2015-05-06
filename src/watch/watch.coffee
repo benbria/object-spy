@@ -8,6 +8,12 @@ exports.watch = (obj) ->
         logger.warn "watch() called on null or undefined value"
         return null
     else
+        # Test observe functionality
+        Object.observe obj, (changes) ->
+           console.log changes
+
+        console.log 'Sanity check'
+
         type = util.customTypeof obj
 
         if (type isnt 'object') and (type isnt 'function')
