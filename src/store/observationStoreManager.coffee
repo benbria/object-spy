@@ -29,8 +29,8 @@ class ObservationStoreManager
             @ownStore.get().then (ownData) ->
                 return { ownData, propertyData }
 
-    @getObservations: (cb) ->
-        getObservationsPromise().then( (data) ->
+    getObservations: (cb) ->
+        @getObservationsPromise().then( (data) ->
             cb null, data
         ).catch( (err) ->
             cb err
