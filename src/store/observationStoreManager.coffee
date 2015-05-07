@@ -4,29 +4,29 @@ ObservationStore            = require './observationStore'
 
 class ObservationStoreManager
     constructor: (parentTickObj) ->
-        @tickObj = parentTickObj ? {tick: 0}
-        @ownStore = new ObservationStore(@tickObj)
-        @propertiesStoreManagers = {}
+        @_tickObj = parentTickObj ? {tick: 0}
+        @_ownStore = new ObservationStore(@_tickObj)
+        @_propertiesStoreManagers = {}
 
     getTickObj: ->
-        @tickObj
+        @_tickObj
 
     addPropertyStore: (key, observationStoreManager) ->
-        @propertiesStoreManagers[key] = observationStoreManager
+        @_propertiesStoreManagers[key] = observationStoreManager
 
     addOwnObservations: (data) ->
-        @ownStore.add data
+        @_ownStore.add data
 
     getObservationsPromise: =>
-        keys = _.keys @propertiesStoreManagers
-        allPropertyData = Promise.all(_.invoke(@propertiesStoreManagers, 'getObservationsPromise'))
+        keys = _.keys @_propertiesStoreManagers
+        allPropertyData = Promise.all(_.invoke(@_propertiesStoreManagers, 'getObservationsPromise'))
         allPropertyData.then (contents) =>
             propertyData = _.reduce contents,
                 (result, storeData, index) ->
                     result[keys[index]] = storeData
                     return result
                 , {}
-            @ownStore.get().then (ownData) ->
+            @_ownStore.get().then (ownData) ->
                 return { ownData, propertyData }
 
     getObservations: (cb) ->
