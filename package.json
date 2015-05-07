@@ -29,7 +29,7 @@
   "dependencies": {
     "es6-promise": "^2.0.1",
     "lodash": "^3.7.0",
-    "object.observe": "git+https://github.com/MaxArt2501/object-observe.git"
+    "object.observe": "^0.2.4"
   },
   "devDependencies": {
     "coffee-script": "^1.9.1",
