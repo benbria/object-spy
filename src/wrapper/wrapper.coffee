@@ -12,6 +12,11 @@ exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
     storeManager = new ObservationStoreManager(parentTickObj)
     propertyNames = Object.getOwnPropertyNames obj
 
+    # Test observe functionality
+    Object.observe wrapped, (changes) ->
+        #console.log (obj.name for obj in changes)
+        console.log (changes)
+
     _.forEach propertyNames, (propName) ->
         wrapProperty obj, wrapped, propName, storeManager
 
@@ -61,11 +66,6 @@ wrapProperty = (obj, wrapped, propName, storeManager) ->
             )
             logger.debug "set() called for '#{propName}', with new value #{newValue}"
             setValue(newValue)
-
-    # Test observe functionality
-    Object.observe wrapped, (changes) ->
-        console.log (obj.name for obj in changes)
-        #console.log (changes)
 
     Object.defineProperty wrapped, propName, wrapperDescriptor
 
