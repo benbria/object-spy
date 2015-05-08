@@ -1,6 +1,7 @@
 wrapper                     = require '../wrapper/wrapper'
 logger                      = require('../util/logger').getLogger()
 util                        = require '../util/util'
+observe                     = require 'object.observe'
 
 exports.watch = (obj) ->
     unless obj?
@@ -17,4 +18,13 @@ exports.watch = (obj) ->
         result = {wrapped}
         result.getObservations = storeManager.getObservations
         result.getObservationsPromise = storeManager.getObservationsPromise
+        # result.unwatch = ->
+        #     console.log 'attempting unwatch...'
+        #     setTimeout ->
+        #         result = Object.unobserve result.wrapped, ->
+        #             console.log 'unobserved?'
+        #         console.log 'Unobserve returned:'
+        #         console.log result
+        #     , 500
+
         return result
