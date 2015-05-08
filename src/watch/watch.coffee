@@ -1,20 +1,12 @@
 wrapper                     = require '../wrapper/wrapper'
 logger                      = require('../util/logger').getLogger()
 util                        = require '../util/util'
-observe                     = require 'object.observe'
 
 exports.watch = (obj) ->
     unless obj?
         logger.warn "watch() called on null or undefined value"
         return null
     else
-        # Test observe functionality
-        Object.observe obj, (changes) ->
-           console.log changes
-
-        console.log 'Sanity check'
-        obj.hi = 5 # ADDED (should output to console)
-
         type = util.customTypeof obj
 
         if (type isnt 'object') and (type isnt 'function')

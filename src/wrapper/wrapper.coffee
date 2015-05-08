@@ -3,6 +3,7 @@ logger                      = require('../util/logger').getLogger()
 ObservationStoreManager     = require '../store/observationStoreManager'
 {OBSERVATION_CATEGORIES}    = require '../util/constants'
 util                        = require '../util/util'
+observe                     = require 'object.observe'
 
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
@@ -60,6 +61,11 @@ wrapProperty = (obj, wrapped, propName, storeManager) ->
             )
             logger.debug "set() called for '#{propName}', with new value #{newValue}"
             setValue(newValue)
+
+    # Test observe functionality
+    Object.observe wrapped, (changes) ->
+        console.log (obj.name for obj in changes)
+        #console.log (changes)
 
     Object.defineProperty wrapped, propName, wrapperDescriptor
 
