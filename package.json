@@ -24,7 +24,8 @@
     "url": "benbria.com"
   },
   "contributors": [
-    "Bernard Llanos (https://github.com/bllanos)"
+    "Bernard Llanos (https://github.com/bllanos)",
+    "Brandon Leigh-Bennett (https://github.com/bsleighb)"
   ],
   "dependencies": {
     "es6-promise": "^2.0.1",
