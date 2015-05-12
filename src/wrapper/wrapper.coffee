@@ -6,15 +6,28 @@ util                        = require '../util/util'
 
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
-exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
-    wrapped = {}
+exports.wrap = wrap = (obj, parentTickObj, prototypeWrappingDepth) ->
     storeManager = new ObservationStoreManager(parentTickObj)
+    wrapped = makeWrapperWithPrototype obj, parentTickObj, prototypeWrappingDepth
     propertyNames = Object.getOwnPropertyNames obj
 
     _.forEach propertyNames, (propName) ->
         wrapProperty obj, wrapped, propName, storeManager
 
     return {wrapped, storeManager}
+
+makeWrapperWithPrototype = (obj, parentTickObj, prototypeWrappingDepth) ->
+    protoObj = Object.getPrototypeOf(obj)
+    if protoObj is null or protoObj is Object.prototype or protoObj is Function.prototype
+        prototypeWrappingDepth = 0
+
+    if prototypeWrappingDepth isnt 0
+        # Recursive case
+        if prototypeWrappingDepth > 0
+            prototypeWrappingDepth--
+        protoObj = wrap protoObj, parentTickObj, prototypeWrappingDepth
+
+    Object.create protoObj
 
 wrapProperty = (obj, wrapped, propName, storeManager) ->
     descriptor = Object.getOwnPropertyDescriptor obj, propName
@@ -43,7 +56,7 @@ wrapProperty = (obj, wrapped, propName, storeManager) ->
             logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
             if !isWrapped and wrapOnRetrievalTest(currentValue)
                 logger.debug "Replacing value under key '#{propName}' with a wrapper object"
-                propertyWrapResult = wrapProperties(currentValue, storeManager.getTickObj())
+                propertyWrapResult = wrap(currentValue, storeManager.getTickObj())
                 isWrapped = true
                 currentValue = propertyWrapResult.wrapped
                 setValue(currentValue)

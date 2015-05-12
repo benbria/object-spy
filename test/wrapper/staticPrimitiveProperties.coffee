@@ -7,6 +7,6 @@ describe 'Wrapping objects with primitive properties and no property additions o
 
     it 'should wrap an empty object', ->
         obj = {}
-        {wrapped} = wrapper.wrapProperties(obj)
+        {wrapped} = wrapper.wrap(obj)
         expect(wrapped).to.be.empty
         expect(wrapped).to.be.instanceof(Object)
