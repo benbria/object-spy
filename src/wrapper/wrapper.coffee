@@ -6,9 +6,9 @@ util                        = require '../util/util'
 
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
-exports.wrap = wrap = (obj, parentTickObj, prototypeWrappingDepth) ->
-    storeManager = new ObservationStoreManager(parentTickObj)
-    wrapped = makeWrapperWithPrototype obj, parentTickObj, prototypeWrappingDepth
+exports.wrap = wrap = (obj, parentStoreManager=null, prototypeWrappingDepth=0) ->
+    storeManager = new ObservationStoreManager(parentStoreManager)
+    wrapped = makeWrapperWithPrototype obj, storeManager, prototypeWrappingDepth
     propertyNames = Object.getOwnPropertyNames obj
 
     _.forEach propertyNames, (propName) ->
@@ -16,8 +16,9 @@ exports.wrap = wrap = (obj, parentTickObj, prototypeWrappingDepth) ->
 
     return {wrapped, storeManager}
 
-makeWrapperWithPrototype = (obj, parentTickObj, prototypeWrappingDepth) ->
+makeWrapperWithPrototype = (obj, storeManager, prototypeWrappingDepth) ->
     protoObj = Object.getPrototypeOf(obj)
+    console.log "protoObj, original: ", protoObj
     if protoObj is null or protoObj is Object.prototype or protoObj is Function.prototype
         prototypeWrappingDepth = 0
 
@@ -25,8 +26,13 @@ makeWrapperWithPrototype = (obj, parentTickObj, prototypeWrappingDepth) ->
         # Recursive case
         if prototypeWrappingDepth > 0
             prototypeWrappingDepth--
-        protoObj = wrap protoObj, parentTickObj, prototypeWrappingDepth
 
+        logger.debug "Using a wrapper object as the prototype, prototypeWrappingDepth = #{prototypeWrappingDepth}"
+        protoObjWrapResult = wrap protoObj, storeManager, prototypeWrappingDepth
+        protoObj = protoObjWrapResult.wrapped
+        storeManager.setPrototypeStore protoObjWrapResult.storeManager
+
+    console.log "protoObj, adjusted: ", protoObj
     Object.create protoObj
 
 wrapProperty = (obj, wrapped, propName, storeManager) ->
@@ -56,7 +62,7 @@ wrapProperty = (obj, wrapped, propName, storeManager) ->
             logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
             if !isWrapped and wrapOnRetrievalTest(currentValue)
                 logger.debug "Replacing value under key '#{propName}' with a wrapper object"
-                propertyWrapResult = wrap(currentValue, storeManager.getTickObj())
+                propertyWrapResult = wrap currentValue, storeManager, 0
                 isWrapped = true
                 currentValue = propertyWrapResult.wrapped
                 setValue(currentValue)
