@@ -18,7 +18,6 @@ exports.wrap = wrap = (obj, parentStoreManager=null, prototypeWrappingDepth=0) -
 
 makeWrapperWithPrototype = (obj, storeManager, prototypeWrappingDepth) ->
     protoObj = Object.getPrototypeOf(obj)
-    console.log "protoObj, original: ", protoObj
     if protoObj is null or protoObj is Object.prototype or protoObj is Function.prototype
         prototypeWrappingDepth = 0
 
@@ -32,7 +31,6 @@ makeWrapperWithPrototype = (obj, storeManager, prototypeWrappingDepth) ->
         protoObj = protoObjWrapResult.wrapped
         storeManager.setPrototypeStore protoObjWrapResult.storeManager
 
-    console.log "protoObj, adjusted: ", protoObj
     Object.create protoObj
 
 wrapProperty = (obj, wrapped, propName, storeManager) ->

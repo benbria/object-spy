@@ -4,7 +4,7 @@ ObservationStore            = require './observationStore'
 
 class ObservationStoreManager
     constructor: (parentStoreManager) ->
-        @_tickObj = parentTickObj?._tickObj ? {tick: 0}
+        @_tickObj = parentStoreManager?._tickObj ? {tick: 0}
         @_ownStore = new ObservationStore(@_tickObj)
         @_propertiesStoreManagers = {}
         # If it was possible to observe changes to the prototype itself,
