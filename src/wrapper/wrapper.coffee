@@ -103,8 +103,8 @@ makeAccessorUtilities = (descriptor, propName) ->
             value
         getEventCategory = OBSERVATION_CATEGORIES.READ
         wrapOnRetrievalTest = (currentValue) ->
-            type = util.customTypeof currentValue
-            (type is 'object') or (type is 'function')
+            {isObject} = util.customTypeof currentValue
+            isObject
 
     if descriptor.set?
         setValue = descriptor.set

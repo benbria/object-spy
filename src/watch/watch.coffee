@@ -8,15 +8,15 @@ exports.watch = (obj, options={}) ->
         logger.warn "watch() called on null or undefined value"
         return null
     else
-        type = util.customTypeof obj
+        {type, isObject} = util.customTypeof obj
 
-        if (type isnt 'object') and (type isnt 'function')
+        unless isObject
             logger.warn "watch() called on non-object, type '#{type}'"
             return null
 
         # Validate watch options
         options = _.defaults {}, options, {prototypeWrappingDepth: 0}
-        if util.customTypeof(options.prototypeWrappingDepth) isnt 'number'
+        if util.customTypeof(options.prototypeWrappingDepth).type isnt 'number'
             logger.warn "watch() received options with invalid type of `prototypeWrappingDepth` property.
                 Expected a number."
             return null

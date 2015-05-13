@@ -12,11 +12,15 @@ exports.concatenateArrays = (arrays) ->
     )
 
 exports.customTypeof = (value) ->
-    if value isnt null
+    unless _.isNull(value)
         type = typeof value
         if type is 'number' and _.isNaN(value)
             type = 'NaN'
+        else if _.isArray(value)
+            type = 'array'
+        else if _.isRegExp
+            type = 'regexp'
     else
         type = 'null'
 
-    return type
+    return {type, isObject: _.isObject(value)}

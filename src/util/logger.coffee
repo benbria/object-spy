@@ -29,5 +29,5 @@ validateLogger = (newLogger) ->
     unless newLogger?
         throw new Error "validateLogger() called on a null or undefined value"
     for name in loggerMethods
-        unless util.customTypeof(newLogger?[name]) is 'function'
+        unless util.customTypeof(newLogger?[name]).type is 'function'
             throw new Error "validateLogger() called on object missing a '#{name}' function"
