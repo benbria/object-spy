@@ -14,22 +14,21 @@ exports.watch = (obj, options={}) ->
             logger.warn "watch() called on non-object, type '#{type}'"
             return null
 
-        # Validate watch options
         options = prepareOptions options
         unless options?
             return null
 
-        {wrapped, storeManager} = wrapper.wrap obj, null, options.prototypeWrappingDepth
+        {wrapped, storeManager} = wrapper.wrap obj, null, options
         result = {wrapped}
         result.getObservations = storeManager.getObservations
         result.getObservationsPromise = storeManager.getObservationsPromise
         return result
 
+# Validate watch options
 prepareOptions = (options) ->
-    # Validate watch options
     options = _.defaults {}, options, {
         prototypeWrappingDepth: 0
-        propertyPrototypeWrappingDepth: 0
+        wrapPropertyPrototypes: false
     }
 
     valid = true
@@ -42,15 +41,19 @@ prepareOptions = (options) ->
         logger.warn "watch() received options with non-integer `prototypeWrappingDepth` property."
         valid = false
 
-    if util.customTypeof(options.propertyPrototypeWrappingDepth).type isnt 'number'
-        logger.warn "watch() received options with invalid type of `propertyPrototypeWrappingDepth` property.
-            Expected a number."
+    if util.customTypeof(options.wrapPropertyPrototypes).type isnt 'boolean'
+        logger.warn "watch() received options with invalid type of `wrapPropertyPrototypes` property.
+            Expected a boolean."
         valid = false
-    else if Math.floor(options.propertyPrototypeWrappingDepth) isnt options.propertyPrototypeWrappingDepth
-        logger.warn "watch() received options with non-integer `propertyPrototypeWrappingDepth` property."
+
+    if options.prototypeWrappingDepth is 0 and options.wrapPropertyPrototypes
+        logger.warn "watch() received options where `wrapPropertyPrototypes` is true,
+            but `prototypeWrappingDepth` is zero.
+            The two settings are in conflict."
         valid = false
 
     if valid
         return options
     else
+        logger.warn "Aborting watch() operation due to invalid options object."
         return null

@@ -59,7 +59,7 @@ shouldStoreValue = (category, value) ->
         true
     else
         {isObject} = util.customTypeof value
-        isObject
+        !isObject
 
 class ObservationStore
     constructor: (parentTickObj) ->
