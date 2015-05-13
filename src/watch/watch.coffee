@@ -40,6 +40,9 @@ prepareOptions = (options) ->
     else if Math.floor(options.prototypeWrappingDepth) isnt options.prototypeWrappingDepth
         logger.warn "watch() received options with non-integer `prototypeWrappingDepth` property."
         valid = false
+    else if options.prototypeWrappingDepth < -1
+        logger.warn "watch() received options with `prototypeWrappingDepth` property less than -1."
+        valid = false
 
     if util.customTypeof(options.wrapPropertyPrototypes).type isnt 'boolean'
         logger.warn "watch() received options with invalid type of `wrapPropertyPrototypes` property.

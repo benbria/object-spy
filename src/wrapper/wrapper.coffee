@@ -19,6 +19,11 @@ exports.wrap = wrap = (obj, parentStoreManager=null, options) ->
 makeWrapperWithPrototype = (obj, storeManager, {prototypeWrappingDepth, wrapPropertyPrototypes}) ->
     protoObj = Object.getPrototypeOf(obj)
     if protoObj is null or protoObj is Object.prototype or protoObj is Function.prototype
+        # Avoid wrapping built-in objects.
+        # Another way to do this would perhaps be to check if
+        # `_.isNative(protoObj.constructor)` is `true`,
+        # but this relies on the accuracy of the `constructor` property,
+        # which [isn't guaranteed](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor).
         prototypeWrappingDepth = 0
 
     if prototypeWrappingDepth isnt 0
