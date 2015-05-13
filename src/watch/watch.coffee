@@ -15,10 +15,8 @@ exports.watch = (obj, options={}) ->
             return null
 
         # Validate watch options
-        options = _.defaults {}, options, {prototypeWrappingDepth: 0}
-        if util.customTypeof(options.prototypeWrappingDepth).type isnt 'number'
-            logger.warn "watch() received options with invalid type of `prototypeWrappingDepth` property.
-                Expected a number."
+        options = prepareOptions options
+        unless options?
             return null
 
         {wrapped, storeManager} = wrapper.wrap obj, null, options.prototypeWrappingDepth
@@ -26,3 +24,33 @@ exports.watch = (obj, options={}) ->
         result.getObservations = storeManager.getObservations
         result.getObservationsPromise = storeManager.getObservationsPromise
         return result
+
+prepareOptions = (options) ->
+    # Validate watch options
+    options = _.defaults {}, options, {
+        prototypeWrappingDepth: 0
+        propertyPrototypeWrappingDepth: 0
+    }
+
+    valid = true
+
+    if util.customTypeof(options.prototypeWrappingDepth).type isnt 'number'
+        logger.warn "watch() received options with invalid type of `prototypeWrappingDepth` property.
+            Expected a number."
+        valid = false
+    else if Math.floor(options.prototypeWrappingDepth) isnt options.prototypeWrappingDepth
+        logger.warn "watch() received options with non-integer `prototypeWrappingDepth` property."
+        valid = false
+
+    if util.customTypeof(options.propertyPrototypeWrappingDepth).type isnt 'number'
+        logger.warn "watch() received options with invalid type of `propertyPrototypeWrappingDepth` property.
+            Expected a number."
+        valid = false
+    else if Math.floor(options.propertyPrototypeWrappingDepth) isnt options.propertyPrototypeWrappingDepth
+        logger.warn "watch() received options with non-integer `propertyPrototypeWrappingDepth` property."
+        valid = false
+
+    if valid
+        return options
+    else
+        return null

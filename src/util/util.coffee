@@ -18,7 +18,7 @@ exports.customTypeof = (value) ->
             type = 'NaN'
         else if _.isArray(value)
             type = 'array'
-        else if _.isRegExp
+        else if _.isRegExp(value)
             type = 'regexp'
     else
         type = 'null'
