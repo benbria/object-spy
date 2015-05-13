@@ -158,11 +158,11 @@ Returns an object with the following properties
 ##### `options` parameter to `watch()`
 - `prototypeWrappingDepth`: An integer indicating the depth to which
   the object's prototype chain should be watched.
-  - - `-1`: Watch all members of the prototype chain until encountering
-      `Object.prototype` or `Function.prototype`
-    - `0`: Don't watch the object's prototype
-    - `n`, where `n > 0`: Watch the last `n` members
-      of the prototype chain.
+  - `-1`: Watch all members of the prototype chain until encountering
+    `Object.prototype` or `Function.prototype`
+  - `0`: Don't watch the object's prototype
+  - `n`, where `n > 0`: Watch the last `n` members
+    of the prototype chain.
 - `wrapPropertyPrototypes`: If `true`, watch the prototypes of the
   object's properties, the properties of the object's properties,
   the properties of the properties of the object's prototype, and so
@@ -245,7 +245,7 @@ Some notable absences from the list are the following:
 #### Spy objects have accessor properties instead of data properties
 
 If client code relies on the distinction between properties with data descriptors
-and properties with accessor descriptors (see [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty
+and properties with accessor descriptors (see [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
 for more information on what these are), then the spy object will
 behave differently than the original object.
 
