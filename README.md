@@ -146,7 +146,7 @@ Otherwise, throws an exception.
 Note that the logging is global to the library,
 and is not customizable on a per-spy basis.
 
-#### `watch(obj)`
+#### `watch(obj, options={})`
 Returns an object with the following properties
 - `wrapped`: A spy which can be substituted in client code
   for the `obj` argument, to collect usage data.
@@ -154,6 +154,24 @@ Returns an object with the following properties
   where `data` is the set of observations collected from `wrapped` to date.
 - `getObservationsPromise()`: Returns a promise with the same effect as
   `getObservations()`
+
+##### `options` parameter to `watch()`
+- `prototypeWrappingDepth`: An integer indicating the depth to which
+  the object's prototype chain should be watched.
+  - `-1`: Watch all members of the prototype chain until encountering
+    `Object.prototype` or `Function.prototype`
+  - `0`: Don't watch the object's prototype
+  - `n`, where `n > 0`: Watch the last `n` members
+    of the prototype chain.
+- `wrapPropertyPrototypes`: If `true`, watch the prototypes of the
+  object's properties, the properties of the object's properties,
+  the properties of the properties of the object's prototype, and so
+  forth (i.e. the properties of the prototypes of every
+  non-primitive value in the structure).
+  - The depth to which these additional prototype chains are
+    watched is set by the `prototypeWrappingDepth` value.
+    If `prototypeWrappingDepth` is zero, and `wrapPropertyPrototypes`,
+    `watch()` will log a warning and do nothing.
 
 ## Limitations
 
@@ -209,6 +227,30 @@ an enhanced version of
 [`Object.observe()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/observe)
 to recursively track changes to the entire object. Unfortunately, `Object.observe()`
 does not report property accesses; It only outputs changes.
+
+#### Some changes/events are not observed
+
+The list of events which are currently reported is located
+in [`constants.coffee`](./src/util/constants.coffee).
+
+Some notable absences from the list are the following:
+- Accesses to the prototype: The library can report
+  accesses and changes to the properties of an object's prototype
+  (refer to the above description of the options
+  that can be passed to `watch()` for details).
+  However, it cannot record accesses to the prototype itself.
+  For example, uses of the `__proto__` property,
+  and `Object.getPrototypeOf()` will not result in observations.
+
+#### Spy objects have accessor properties instead of data properties
+
+If client code relies on the distinction between properties with data descriptors
+and properties with accessor descriptors (see [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
+for more information on what these are), then the spy object will
+behave differently than the original object.
+
+In other words, the client code will know it is a spy,
+and observations made through the spy will be useless.
 
 ## Further reading
 

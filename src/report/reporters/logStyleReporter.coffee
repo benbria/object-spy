@@ -18,7 +18,7 @@ class LogStyleReporter extends Reporter
     #                      Default = true
     # ```
     _getReportAsStringArray: (data, options) ->
-        options = _.defaults options, {ascendingByTick: true}
+        options = _.defaults {}, options, {ascendingByTick: true}
         pathFieldWidth = null
 
         flattenEvents.observationDataToEventArray(

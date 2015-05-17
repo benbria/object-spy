@@ -6,17 +6,39 @@ util                        = require '../util/util'
 
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
-exports.wrapProperties = wrapProperties = (obj, parentTickObj) ->
-    wrapped = {}
-    storeManager = new ObservationStoreManager(parentTickObj)
+exports.wrap = wrap = (obj, parentStoreManager=null, options) ->
+    storeManager = new ObservationStoreManager(parentStoreManager)
+    wrapped = makeWrapperWithPrototype obj, storeManager, options
     propertyNames = Object.getOwnPropertyNames obj
 
     _.forEach propertyNames, (propName) ->
-        wrapProperty obj, wrapped, propName, storeManager
+        wrapProperty obj, wrapped, propName, storeManager, options
 
     return {wrapped, storeManager}
 
-wrapProperty = (obj, wrapped, propName, storeManager) ->
+makeWrapperWithPrototype = (obj, storeManager, {prototypeWrappingDepth, wrapPropertyPrototypes}) ->
+    protoObj = Object.getPrototypeOf(obj)
+    if protoObj is null or protoObj is Object.prototype or protoObj is Function.prototype
+        # Avoid wrapping built-in objects.
+        # Another way to do this would perhaps be to check if
+        # `_.isNative(protoObj.constructor)` is `true`,
+        # but this relies on the accuracy of the `constructor` property,
+        # which [isn't guaranteed](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor).
+        prototypeWrappingDepth = 0
+
+    if prototypeWrappingDepth isnt 0
+        # Recursive case
+        if prototypeWrappingDepth > 0
+            prototypeWrappingDepth--
+
+        logger.debug "Using a wrapper object as the prototype, prototypeWrappingDepth = #{prototypeWrappingDepth}"
+        protoObjWrapResult = wrap protoObj, storeManager, {prototypeWrappingDepth, wrapPropertyPrototypes}
+        protoObj = protoObjWrapResult.wrapped
+        storeManager.setPrototypeStore protoObjWrapResult.storeManager
+
+    Object.create protoObj
+
+wrapProperty = (obj, wrapped, propName, storeManager, options) ->
     descriptor = Object.getOwnPropertyDescriptor obj, propName
     {
         getValue
@@ -40,10 +62,19 @@ wrapProperty = (obj, wrapped, propName, storeManager) ->
                 currentValue
             )
 
-            logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
+            try
+                logger.debug "get() called for '#{propName}', value is currently #{currentValue}"
+            catch err
+                logger.debug "get() called for '#{propName}'"
             if !isWrapped and wrapOnRetrievalTest(currentValue)
                 logger.debug "Replacing value under key '#{propName}' with a wrapper object"
-                propertyWrapResult = wrapProperties(currentValue, storeManager.getTickObj())
+                if options.wrapPropertyPrototypes
+                    propertyWrapResult = wrap currentValue, storeManager, options
+                else
+                    propertyWrapResult = wrap currentValue, storeManager, {
+                        prototypeWrappingDepth: 0
+                        wrapPropertyPrototypes: false
+                    }
                 isWrapped = true
                 currentValue = propertyWrapResult.wrapped
                 setValue(currentValue)
@@ -58,7 +89,10 @@ wrapProperty = (obj, wrapped, propName, storeManager) ->
                 propName,
                 newValue
             )
-            logger.debug "set() called for '#{propName}', with new value #{newValue}"
+            try
+                logger.debug "set() called for '#{propName}', with new value #{newValue}"
+            catch err
+                logger.debug "set() called for '#{propName}'"
             setValue(newValue)
 
     Object.defineProperty wrapped, propName, wrapperDescriptor
@@ -86,8 +120,8 @@ makeAccessorUtilities = (descriptor, propName) ->
             value
         getEventCategory = OBSERVATION_CATEGORIES.READ
         wrapOnRetrievalTest = (currentValue) ->
-            type = util.customTypeof currentValue
-            (type is 'object') or (type is 'function')
+            {isObject} = util.customTypeof currentValue
+            isObject
 
     if descriptor.set?
         setValue = descriptor.set

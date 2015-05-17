@@ -31,6 +31,12 @@ flattenObservationStoreManagerData = (observationData, path) ->
         else
             flattenObservationStoreData value, path.concat([key])
     promises.push flattenObservationStoreData(observationData.ownData, path)
+    if observationData.prototypeData?
+        promises.push(
+            flattenObservationStoreManagerData(
+                observationData.prototypeData, path.concat(['__proto__'])
+                )
+            )
     Promise.all(promises).then concatenateArrays
 
 # Converts observation store data

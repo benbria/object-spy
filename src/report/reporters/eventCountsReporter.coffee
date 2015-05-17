@@ -117,7 +117,7 @@ class EventCountsReporter extends Reporter
     #                     Default = true
     # ```
     _getReportAsStringArray: (data, options) ->
-        options = _.defaults options, {
+        options = _.defaults {}, options, {
             byEventType: true
             byEventTypeAndPath: true
             hideZeroCounts: true

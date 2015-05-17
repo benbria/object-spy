@@ -17,7 +17,7 @@ makeObservationGroup = (parentTickObj) ->
 
         add = (data) ->
             for name, value of data
-                type = util.customTypeof value
+                {type} = util.customTypeof value
                 valueWrapper = {type}
                 valueWrapper.valueIsStored = shouldStoreValue(categoryName, value)
                 if valueWrapper.valueIsStored
@@ -58,8 +58,8 @@ shouldStoreValue = (category, value) ->
     unless (category is OBSERVATION_CATEGORIES.REMOVED) or (category is OBSERVATION_CATEGORIES.READ)
         true
     else
-        type = util.customTypeof value
-        (type isnt 'function') and (type isnt 'object')
+        {isObject} = util.customTypeof value
+        !isObject
 
 class ObservationStore
     constructor: (parentTickObj) ->
