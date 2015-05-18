@@ -61,8 +61,8 @@ shouldStoreValue = (category, value) ->
         {isObject} = util.customTypeof value
         !isObject
 
-class ObservationStore
+class PropertyStore
     constructor: (parentTickObj) ->
         {getGroup: @get, addGroup: @add} = makeObservationGroup(parentTickObj)
 
-module.exports = ObservationStore
+module.exports = PropertyStore

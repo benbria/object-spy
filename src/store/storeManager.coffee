@@ -1,22 +1,22 @@
 _                           = require 'lodash'
 {Promise}                   = require 'es6-promise'
-ObservationStore            = require './observationStore'
+PropertyStore               = require './propertyStore'
 
-class ObservationStoreManager
+class StoreManager
     constructor: (parentStoreManager) ->
         @_tickObj = parentStoreManager?._tickObj ? {tick: 0}
-        @_ownStore = new ObservationStore(@_tickObj)
+        @_ownStore = new PropertyStore(@_tickObj)
         @_propertiesStoreManagers = {}
         # If it was possible to observe changes to the prototype itself,
-        # then this should be turned into a list of ObservationStoreManager
+        # then this should be turned into a list of StoreManager
         # objects (one for each prototype of the object being watched).
         @_prototypeStoreManager = null
 
-    addPropertyStore: (key, observationStoreManager) ->
-        @_propertiesStoreManagers[key] = observationStoreManager
+    addPropertyStore: (key, storeManager) ->
+        @_propertiesStoreManagers[key] = storeManager
 
-    setPrototypeStore: (observationStoreManager) ->
-        @_prototypeStoreManager = observationStoreManager
+    setPrototypeStore: (storeManager) ->
+        @_prototypeStoreManager = storeManager
 
     addOwnObservations: (data) ->
         @_ownStore.add data
@@ -48,4 +48,4 @@ class ObservationStoreManager
             cb err
         )
 
-module.exports = ObservationStoreManager
+module.exports = StoreManager

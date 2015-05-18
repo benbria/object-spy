@@ -1,13 +1,14 @@
 _                           = require 'lodash'
 logger                      = require('../util/logger').getLogger()
-ObservationStoreManager     = require '../store/observationStoreManager'
-{PROPERTY_OBSERVATION_CATEGORIES}    = require '../util/constants'
+StoreManager                = require '../store/storeManager'
 util                        = require '../util/util'
+
+{PROPERTY_OBSERVATION_CATEGORIES}    = require '../util/constants'
 
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
 exports.wrap = wrap = (obj, parentStoreManager=null, options) ->
-    storeManager = new ObservationStoreManager(parentStoreManager)
+    storeManager = new StoreManager(parentStoreManager)
     wrapped = makeWrapperWithPrototype obj, storeManager, options
     propertyNames = Object.getOwnPropertyNames obj
 

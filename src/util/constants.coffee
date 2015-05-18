@@ -5,7 +5,7 @@ exports.PROPERTY_OBSERVATION_CATEGORIES = PROPERTY_OBSERVATION_CATEGORIES =
     # To be used to denote the addition of a property
     # ADDED: 'added'
 
-    # Taken into account in `src/store/observationStore.coffee`,
+    # Taken into account in `src/store/propertyStore.coffee`,
     # but not yet implemented in wrapper code.
     REMOVED: 'removed'
 
