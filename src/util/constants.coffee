@@ -42,10 +42,10 @@ exports.PROPERTY_OBSERVATION_CATEGORIES_SORTED =
 exports.CALL_OBSERVATION_CATEGORIES = CALL_OBSERVATION_CATEGORIES =
 
     # Function call resulting in a value returned
-    CALL_RETURN: 'call and return'
+    CALL_RETURN: 'call returned value'
 
     # Function call generating an exception
-    CALL_EXCEPT: 'call and exception'
+    CALL_EXCEPT: 'call threw exception'
 
 exports.CALL_OBSERVATION_CATEGORIES_SORTED =
     _.sortBy CALL_OBSERVATION_CATEGORIES, (name) -> name

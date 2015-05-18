@@ -21,7 +21,23 @@ makeWrapperWithPrototype = (obj, storeManager, {prototypeWrappingDepth, wrapProp
     protoObj = Object.getPrototypeOf(obj)
 
     if protoObj is Function.prototype
-        -> obj.apply this, arguments
+        ->
+            exceptValue = null
+            try
+                returnValue = obj.apply this, arguments
+            catch exceptValue
+
+            callObservationData = {
+                arguments
+                exceptValue
+                returnValue
+            }
+
+            storeManager.addCallObservation callObservationData
+            if exceptValue?
+                throw exceptValue
+            return returnValue
+
     else
         if protoObj is null or protoObj is Object.prototype
             # Avoid wrapping built-in objects.
