@@ -1,12 +1,14 @@
 _                           = require 'lodash'
 {Promise}                   = require 'es6-promise'
 PropertyStore               = require './propertyStore'
+CallStore                   = require './callStore'
 
 class StoreManager
-    constructor: (parentStoreManager) ->
+    constructor: (parentStoreManager, options) ->
         @_tickObj = parentStoreManager?._tickObj ? {tick: 0}
         @_ownStore = new PropertyStore(@_tickObj)
         @_propertiesStoreManagers = {}
+        @_callStore = new CallStore options
         # If it was possible to observe changes to the prototype itself,
         # then this should be turned into a list of StoreManager
         # objects (one for each prototype of the object being watched).
@@ -21,6 +23,9 @@ class StoreManager
     addOwnObservations: (data) ->
         @_ownStore.add data
 
+    addCallObservations: (data) ->
+        @_callStore.add data
+
     getObservationsPromise: =>
         keys = _.keys @_propertiesStoreManagers
         allPropertyData = Promise.all(_.invoke(@_propertiesStoreManagers, 'getObservationsPromise'))
@@ -31,13 +36,14 @@ class StoreManager
                     return result
                 , {}
 
-            remainingPromises = [ @_ownStore.get() ]
+            remainingPromises = [ @_ownStore.get(), @_callStore.get() ]
             if @_prototypeStoreManager?
                 remainingPromises.push @_prototypeStoreManager.getObservationsPromise()
             Promise.all(remainingPromises).then (remainingData) ->
                 return {
                     ownData: remainingData[0]
-                    prototypeData: remainingData[1] ? null
+                    callData: remainingData[1]
+                    prototypeData: remainingData[2] ? null
                     propertyData
                 }
 

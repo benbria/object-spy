@@ -8,7 +8,7 @@ util                        = require '../util/util'
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
 exports.wrap = wrap = (obj, parentStoreManager=null, options) ->
-    storeManager = new StoreManager(parentStoreManager)
+    storeManager = new StoreManager(parentStoreManager, options)
     wrapped = makeWrapperWithPrototype obj, storeManager, options
     propertyNames = Object.getOwnPropertyNames obj
 

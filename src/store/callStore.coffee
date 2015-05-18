@@ -1,0 +1,66 @@
+_                           	= require 'lodash'
+{Promise}                   	= require 'es6-promise'
+{CALL_OBSERVATION_CATEGORIES}   = require '../util/constants'
+util                        	= require '../util/util'
+logger                      = require('../util/logger').getLogger()
+
+class CallStore
+    constructor: (@_parentTickObj, options) ->
+        @_copyCallObjectValues = options.copyCallObjectValues
+        @_callReturns = []
+        @_callExcepts = []
+
+    get: ->
+    	allContents = Promise.all(_.map([@_callReturns, @_callExcept], (list) ->
+    		return new Promise((resolve, reject) ->
+            	listCopy = _.cloneDeep list
+            	resolve(listCopy)
+    		)
+		))
+        allContents.then (contents) ->
+            return {
+                callReturns: contents[0]
+                callExcepts: contents[1]
+            }
+
+    add: (data) ->
+        if data.returnValue? and !data.exceptValue?
+            @_addCallReturn data
+        else if data.exceptValue? and !data.returnValue?
+            @_addCallExcept data
+        else
+            logger.error "Unknown type of call event passed to CallStore.add()"
+
+	_addCallReturn: (data) ->
+		event =
+			tick: @_parentTickObj.tick++
+			arguments: @_copyArguments(data.arguments)
+            returnValue: @_copyValue(data.returnValue)
+
+        @_callReturns.push event
+
+
+	_addCallExcept: (data) ->
+        event =
+            tick: @_parentTickObj.tick++
+            arguments: @_copyArguments(data.arguments)
+            exceptValue: @_copyValue(data.exceptValue)
+
+        @_callExcepts.push event
+
+    _copyArguments: (args) ->
+        copyArgs =  _.map args, @_copyValue
+
+    _copyValue = (value) ->
+        {isObject, type} = util.customTypeof value
+        copy =
+            type: type
+            valueIsStored: (@_copyCallObjectValues || !isObject)
+        if copy.valueIsStored
+            if isObject
+                copy.value = _.cloneDeep value
+            else
+                copy.value = value
+        return copy
+
+module.exports = CallStore

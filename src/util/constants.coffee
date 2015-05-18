@@ -39,7 +39,18 @@ exports.PROPERTY_OBSERVATION_CATEGORIES_SORTED =
     _.sortBy PROPERTY_OBSERVATION_CATEGORIES, (name) -> name
 
 
-exports.OBJECT_OBSERVATION_CATEGORIES = OBJECT_OBSERVATION_CATEGORIES =
+exports.CALL_OBSERVATION_CATEGORIES = CALL_OBSERVATION_CATEGORIES =
+
+    # Function call resulting in a value returned
+    CALL_RETURN: 'call and return'
+
+    # Function call generating an exception
+    CALL_EXCEPT: 'call and exception'
+
+exports.CALL_OBSERVATION_CATEGORIES_SORTED =
+    _.sortBy CALL_OBSERVATION_CATEGORIES, (name) -> name
+
+# exports.OBJECT_OBSERVATION_CATEGORIES = OBJECT_OBSERVATION_CATEGORIES =
 
     # Not yet implemented
     # Part of the specification of Object.observe(), but not mentioned in
@@ -51,11 +62,5 @@ exports.OBJECT_OBSERVATION_CATEGORIES = OBJECT_OBSERVATION_CATEGORIES =
     # the README of `observe-js` (https://github.com/Polymer/observe-js)
     # PREVENT_EXTENSIONS: 'preventExtensions'
 
-    # Function call resulting in a value returned
-    CALL_RETURN: 'call and return'
-
-    # Function call generating an exception
-    CALL_EXCEPT: 'call and exception'
-
-exports.OBJECT_OBSERVATION_CATEGORIES_SORTED =
-    _.sortBy OBJECT_OBSERVATION_CATEGORIES, (name) -> name
+# exports.OBJECT_OBSERVATION_CATEGORIES_SORTED =
+    # _.sortBy OBJECT_OBSERVATION_CATEGORIES, (name) -> name
