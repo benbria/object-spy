@@ -7,14 +7,14 @@ Reporter                    = require '../reporter'
 constants                   = require '../../util/constants'
 {concatenateArrays}         = require '../../util/util'
 
-{OBSERVATION_CATEGORIES, OBSERVATION_CATEGORIES_SORTED} = constants
+{PROPERTY_OBSERVATION_CATEGORIES, PROPERTY_OBSERVATION_CATEGORIES_SORTED} = constants
 {EVENT_CATEGORY, PATH, COUNT} = textFormatting.FIELD_NAMES
 
 FIELD_WIDTH = 22
 
 aggregateByEventType = (events) ->
     return new Promise((resolve, reject) ->
-        aggregatedEvents = _.reduce OBSERVATION_CATEGORIES,
+        aggregatedEvents = _.reduce PROPERTY_OBSERVATION_CATEGORIES,
             (result, category) ->
                 result[category] = {}
                 return result
@@ -40,7 +40,7 @@ unpackAggregateByEventType = (aggregatedEvents, sortByPath, hideZeroCounts) ->
             resolve({counts: sortedEvents, category})
         )
     ).then (unpackedDisorderedEvents) ->
-        nestedArray = _.map OBSERVATION_CATEGORIES_SORTED, (category) ->
+        nestedArray = _.map PROPERTY_OBSERVATION_CATEGORIES_SORTED, (category) ->
             _.find unpackedDisorderedEvents, (value) ->
                 value.category is category
         if hideZeroCounts
@@ -64,7 +64,7 @@ aggregateByPath = (events) ->
         aggregatedEvents = _.reduce events,
             (result, event, index) ->
                 unless result[event.pathString]?
-                    result[event.pathString] = _.reduce OBSERVATION_CATEGORIES,
+                    result[event.pathString] = _.reduce PROPERTY_OBSERVATION_CATEGORIES,
                         (subResult, category) ->
                             subResult[category] = 0
                             return subResult
@@ -87,7 +87,7 @@ pathSortedToStringArray = (arrayByPath, hideZeroCounts) ->
     Promise.all(_.map arrayByPath, (value) ->
         return new Promise((resolve, reject) ->
             stringArray = []
-            _.forEach OBSERVATION_CATEGORIES_SORTED, (category) ->
+            _.forEach PROPERTY_OBSERVATION_CATEGORIES_SORTED, (category) ->
                 count = value[category]
                 unless hideZeroCounts and count is 0
                     stringArray.push "\t#{_.padRight category, FIELD_WIDTH}#{count}"

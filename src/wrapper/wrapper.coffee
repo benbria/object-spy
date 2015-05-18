@@ -1,7 +1,7 @@
 _                           = require 'lodash'
 logger                      = require('../util/logger').getLogger()
 ObservationStoreManager     = require '../store/observationStoreManager'
-{OBSERVATION_CATEGORIES}    = require '../util/constants'
+{PROPERTY_OBSERVATION_CATEGORIES}    = require '../util/constants'
 util                        = require '../util/util'
 
 # Note: This does not find/handle symbol properties
@@ -134,36 +134,36 @@ makeAccessorUtilities = (descriptor, propName) ->
             The values that the get() function returns
             will not be wrapped when returned, because they are not part of the object itself."
         getValue = descriptor.get
-        getEventCategory = OBSERVATION_CATEGORIES.GET
+        getEventCategory = PROPERTY_OBSERVATION_CATEGORIES.GET
     else if descriptor.set?
         getValue = ->
             logger.debug "get() called for '#{propName}', but property has no getter."
             return undefined
-        getEventCategory = OBSERVATION_CATEGORIES.GET_ATTEMPT
+        getEventCategory = PROPERTY_OBSERVATION_CATEGORIES.GET_ATTEMPT
     else
         value = descriptor.value
         getValue = ->
             value
-        getEventCategory = OBSERVATION_CATEGORIES.READ
+        getEventCategory = PROPERTY_OBSERVATION_CATEGORIES.READ
         wrapOnRetrievalTest = (currentValue) ->
             {isObject} = util.customTypeof currentValue
             isObject
 
     if descriptor.set?
         setValue = descriptor.set
-        setEventCategory = OBSERVATION_CATEGORIES.SET
+        setEventCategory = PROPERTY_OBSERVATION_CATEGORIES.SET
     else if descriptor.get?
         setValue = (newValue) ->
             logger.debug "set() called for '#{propName}', but property has no setter."
-        setEventCategory = OBSERVATION_CATEGORIES.SET_ATTEMPT
+        setEventCategory = PROPERTY_OBSERVATION_CATEGORIES.SET_ATTEMPT
     else if descriptor.writable
         setValue = (newValue) ->
             value = newValue
-        setEventCategory = OBSERVATION_CATEGORIES.WRITE
+        setEventCategory = PROPERTY_OBSERVATION_CATEGORIES.WRITE
     else
         setValue = (newValue) ->
             logger.debug "set() called for '#{propName}', but property is not writable."
-        setEventCategory = OBSERVATION_CATEGORIES.WRITE_ATTEMPT
+        setEventCategory = PROPERTY_OBSERVATION_CATEGORIES.WRITE_ATTEMPT
 
     return {
         getValue
