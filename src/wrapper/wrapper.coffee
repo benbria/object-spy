@@ -18,27 +18,45 @@ exports.wrap = wrap = (obj, parentStoreManager=null, options) ->
 
 makeWrapperWithPrototype = (obj, storeManager, {prototypeWrappingDepth, wrapPropertyPrototypes}) ->
     protoObj = Object.getPrototypeOf(obj)
-    if protoObj is null or protoObj is Object.prototype or protoObj is Function.prototype
-        # Avoid wrapping built-in objects.
-        # Another way to do this would perhaps be to check if
-        # `_.isNative(protoObj.constructor)` is `true`,
-        # but this relies on the accuracy of the `constructor` property,
-        # which [isn't guaranteed](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor).
-        prototypeWrappingDepth = 0
 
-    if prototypeWrappingDepth isnt 0
-        # Recursive case
-        if prototypeWrappingDepth > 0
-            prototypeWrappingDepth--
+    if protoObj is Function.prototype
+        -> obj.apply this, arguments
+    else
+        if protoObj is null or protoObj is Object.prototype
+            # Avoid wrapping built-in objects.
+            # Another way to do this would perhaps be to check if
+            # `_.isNative(protoObj.constructor)` is `true`,
+            # but this relies on the accuracy of the `constructor` property,
+            # which [isn't guaranteed](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor).
+            prototypeWrappingDepth = 0
 
-        logger.debug "Using a wrapper object as the prototype, prototypeWrappingDepth = #{prototypeWrappingDepth}"
-        protoObjWrapResult = wrap protoObj, storeManager, {prototypeWrappingDepth, wrapPropertyPrototypes}
-        protoObj = protoObjWrapResult.wrapped
-        storeManager.setPrototypeStore protoObjWrapResult.storeManager
+        if prototypeWrappingDepth isnt 0
+            # Recursive case
+            if prototypeWrappingDepth > 0
+                prototypeWrappingDepth--
 
-    Object.create protoObj
+            logger.debug "Using a wrapper object as the prototype,
+                prototypeWrappingDepth = #{prototypeWrappingDepth}"
+            protoObjWrapResult = wrap(
+                protoObj, storeManager, {prototypeWrappingDepth, wrapPropertyPrototypes}
+            )
+            protoObj = protoObjWrapResult.wrapped
+            storeManager.setPrototypeStore protoObjWrapResult.storeManager
+
+        Object.create protoObj
 
 wrapProperty = (obj, wrapped, propName, storeManager, options) ->
+    # This prevents attempted redefinition of built-in properties
+    # of function objects, which will generate errors.
+    # The intention is to remain future-compatible by not hardcoding
+    # a list of built-in properties.
+    if wrapped[propName]?
+        logger.info "
+            Skipping wrapping of already-defined property under the key '#{propName}'.
+            Using assignment instead."
+        wrapped[propName] = obj[propName]
+        return wrapped
+
     descriptor = Object.getOwnPropertyDescriptor obj, propName
     {
         getValue
@@ -95,7 +113,15 @@ wrapProperty = (obj, wrapped, propName, storeManager, options) ->
                 logger.debug "set() called for '#{propName}'"
             setValue(newValue)
 
-    Object.defineProperty wrapped, propName, wrapperDescriptor
+    try
+        Object.defineProperty wrapped, propName, wrapperDescriptor
+    catch err
+        logger.warn "
+            Failed to wrap property '#{propName}', error '#{err}'.
+            Using assignment instead."
+        wrapped[propName] = obj[propName]
+
+    return wrapped
 
 makeAccessorUtilities = (descriptor, propName) ->
     value = null
