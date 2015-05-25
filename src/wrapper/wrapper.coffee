@@ -17,7 +17,8 @@ exports.wrap = wrap = (obj, parentStoreManager=null, options) ->
 
     return {wrapped, storeManager}
 
-makeWrapperWithPrototype = (obj, storeManager, {prototypeWrappingDepth, wrapPropertyPrototypes}) ->
+makeWrapperWithPrototype = (obj, storeManager, options) ->
+    {prototypeWrappingDepth, wrapPropertyPrototypes} = options
     protoObj = Object.getPrototypeOf(obj)
 
     if protoObj is Function.prototype
@@ -55,7 +56,8 @@ makeWrapperWithPrototype = (obj, storeManager, {prototypeWrappingDepth, wrapProp
             logger.debug "Using a wrapper object as the prototype,
                 prototypeWrappingDepth = #{prototypeWrappingDepth}"
             protoObjWrapResult = wrap(
-                protoObj, storeManager, {prototypeWrappingDepth, wrapPropertyPrototypes}
+                protoObj, storeManager,
+                _.defaults({prototypeWrappingDepth, wrapPropertyPrototypes}, options)
             )
             protoObj = protoObjWrapResult.wrapped
             storeManager.setPrototypeStore protoObjWrapResult.storeManager
@@ -106,10 +108,10 @@ wrapProperty = (obj, wrapped, propName, storeManager, options) ->
                 if options.wrapPropertyPrototypes
                     propertyWrapResult = wrap currentValue, storeManager, options
                 else
-                    propertyWrapResult = wrap currentValue, storeManager, {
-                        prototypeWrappingDepth: 0
-                        wrapPropertyPrototypes: false
-                    }
+                    propertyWrapResult = wrap(
+                        currentValue, storeManager,
+                        _.defaults({prototypeWrappingDepth: 0, wrapPropertyPrototypes: false}, options)
+                    )
                 isWrapped = true
                 currentValue = propertyWrapResult.wrapped
                 setValue(currentValue)
