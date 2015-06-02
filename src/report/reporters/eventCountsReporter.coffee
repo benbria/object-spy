@@ -7,22 +7,23 @@ Reporter                    = require '../reporter'
 constants                   = require '../../util/constants'
 {concatenateArrays}         = require '../../util/util'
 
-{PROPERTY_OBSERVATION_CATEGORIES, PROPERTY_OBSERVATION_CATEGORIES_SORTED} = constants
+{ALL_OBSERVATION_CATEGORIES, ALL_OBSERVATION_CATEGORIES_SORTED} = constants
 {EVENT_CATEGORY, PATH, COUNT} = textFormatting.FIELD_NAMES
 
 FIELD_WIDTH = 22
 
 aggregateByEventType = (events) ->
     return new Promise((resolve, reject) ->
-        aggregatedEvents = _.reduce PROPERTY_OBSERVATION_CATEGORIES,
+        aggregatedEvents = _.reduce ALL_OBSERVATION_CATEGORIES,
             (result, category) ->
                 result[category] = {}
                 return result
             , {}
         aggregatedEvents = _.reduce events,
             (result, event, index) ->
-                result[event.category][event.pathString] ?= {count: 0, index, pathString: event.pathString}
-                result[event.category][event.pathString].count++
+                pathString = event.pathString
+                result[event.category][pathString] ?= {count: 0, index, pathString}
+                result[event.category][pathString].count++
                 return result
             , aggregatedEvents
         resolve(aggregatedEvents)
@@ -40,7 +41,7 @@ unpackAggregateByEventType = (aggregatedEvents, sortByPath, hideZeroCounts) ->
             resolve({counts: sortedEvents, category})
         )
     ).then (unpackedDisorderedEvents) ->
-        nestedArray = _.map PROPERTY_OBSERVATION_CATEGORIES_SORTED, (category) ->
+        nestedArray = _.map ALL_OBSERVATION_CATEGORIES_SORTED, (category) ->
             _.find unpackedDisorderedEvents, (value) ->
                 value.category is category
         if hideZeroCounts
@@ -63,13 +64,14 @@ aggregateByPath = (events) ->
     return new Promise((resolve, reject) ->
         aggregatedEvents = _.reduce events,
             (result, event, index) ->
-                unless result[event.pathString]?
-                    result[event.pathString] = _.reduce PROPERTY_OBSERVATION_CATEGORIES,
+                pathString = event.pathString
+                unless result[pathString]?
+                    result[pathString] = _.reduce ALL_OBSERVATION_CATEGORIES,
                         (subResult, category) ->
                             subResult[category] = 0
                             return subResult
-                        , {index, pathString: event.pathString}
-                result[event.pathString][event.category]++
+                        , {index, pathString}
+                result[pathString][event.category]++
                 return result
             , {}
         resolve(aggregatedEvents)
@@ -87,7 +89,7 @@ pathSortedToStringArray = (arrayByPath, hideZeroCounts) ->
     Promise.all(_.map arrayByPath, (value) ->
         return new Promise((resolve, reject) ->
             stringArray = []
-            _.forEach PROPERTY_OBSERVATION_CATEGORIES_SORTED, (category) ->
+            _.forEach ALL_OBSERVATION_CATEGORIES_SORTED, (category) ->
                 count = value[category]
                 unless hideZeroCounts and count is 0
                     stringArray.push "\t#{_.padRight category, FIELD_WIDTH}#{count}"
