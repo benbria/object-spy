@@ -51,7 +51,8 @@ class CallStore
         @_callExcepts.push event
 
     _copyArguments: (args) ->
-        copyArgs =  _.map args, @_copyValue
+        _.map args, (arg) =>
+            @_copyValue(arg)
 
     _copyValue: (value) ->
         {isObject, type} = util.customTypeof value

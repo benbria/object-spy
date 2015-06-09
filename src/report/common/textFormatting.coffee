@@ -11,5 +11,6 @@ exports.FIELD_NAMES =
     EVENT_CATEGORY: 'Event'
     PATH: 'Path'
     VALUE_TYPE: 'Value type'
-    VALUE_VALUE: '(new) value (if stored)'
+    VALUE_VALUE: 'new/return value (if stored)'
+    VALUE_OR_CALL: '(new) value (if stored), or arguments -> return value'
     COUNT: 'Count'
