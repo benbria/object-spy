@@ -1,4 +1,5 @@
 _                           = require 'lodash'
+serialize                   = require 'serialize-javascript'
 {Promise}                   = require 'es6-promise'
 {PROPERTY_OBSERVATION_CATEGORIES}    = require '../util/constants'
 util                        = require '../util/util'
@@ -21,7 +22,7 @@ makeObservationGroup = (parentTickObj) ->
                 valueWrapper = {type}
                 valueWrapper.valueIsStored = shouldStoreValue(categoryName, value)
                 if valueWrapper.valueIsStored
-                    valueWrapper.value = value
+                    valueWrapper.value = serialize(value)
                 collection[name] ?= []
                 collection[name].push {
                     tick: parentTickObj.tick

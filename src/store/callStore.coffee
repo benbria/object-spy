@@ -1,4 +1,5 @@
 _                               = require 'lodash'
+serialize                       = require 'serialize-javascript'
 {Promise}                       = require 'es6-promise'
 {CALL_OBSERVATION_CATEGORIES}   = require '../util/constants'
 util                            = require '../util/util'
@@ -60,10 +61,7 @@ class CallStore
             type: type
             valueIsStored: (@_copyCallObjectValues || !isObject)
         if copy.valueIsStored
-            if isObject
-                copy.value = _.cloneDeep value
-            else
-                copy.value = value
+            copy.value = serialize(value)
         return copy
 
 module.exports = CallStore
