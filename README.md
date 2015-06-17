@@ -33,6 +33,37 @@ of an object are used by client code and assess,
 for example, if the paths of frequently used properties
 are overly long.
 
+#### Reverse engineering a protocol to refactor into a micro-service
+
+If you know how an object interacts with the rest system you know
+which messages are sent to it. If you have an ordering of messages
+for the instances you can derive a state machine which describes a 
+protocol (fsm + message/event types).
+
+If this object acts as a facade to a greater subsystem it should be possible
+to separate this code into a micro-service running in a separate process
+(potentially in a separate git repository). Ideally a micro-service SHOULD
+represent a concurrent activity. It should then be a simple matter of adding
+a message queue between the processes (rabbitmq, zmq etc..) to decouple the code.
+
+Isolated services means it's easier to bisect the system to find errors.
+It also means it's easier to write code because less knowledge is required
+about the system (only the protocol and the micro-service must be understood).
+You can do graceful degradation (something difficult if not impossible in a
+monolithic system). If the protocol of the micro-service is documented it allows
+someone to bisect an issues by identifying which side of the message queue
+is not following the protocol without having to look at the implementation.
+If the protocol is complicated it may be possible to add a middle man who
+can act as a formal contract checker which immediately points to the contract
+violator and the condition that led to the fault.
+
+Micro-services can also go into Erlang style supervisor hierarchies (highly
+recommended) using AND (one for all) & OR (one for one) trees. Which allows
+your system to fail fast and automatically heal. Look into simplevisor
+(in use at CERN) for an example. Supervisors are not simple restart loops;
+They keep a history of restarts and are able to heal most types of failures
+automatically (escalating the failure if necessary to more general subsystems).
+
 ## Usage
 
 ```CoffeeScript
