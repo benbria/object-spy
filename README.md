@@ -60,8 +60,8 @@ violator and the condition that led to the fault.
 Micro-services can also go into Erlang style supervisor hierarchies (highly
 recommended) using AND (one for all) & OR (one for one) trees. Which allows
 your system to fail fast and automatically heal. Look into simplevisor
-(in use at CERN) for an example. Supervisors are not simple restart loops
-they keep a history of restarts and are able to heal most types of failures
+(in use at CERN) for an example. Supervisors are not simple restart loops;
+They keep a history of restarts and are able to heal most types of failures
 automatically (escalating the failure if necessary to more general subsystems).
 
 ## Usage
