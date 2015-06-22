@@ -93,8 +93,10 @@ processObj = (obj) ->
     prototypeWrappingDepth: -1
     # Note that this leaves other options with default values
 }
+
 # Find out how the object is used directly
 processObj spy
+console.log()
 
 # There is also a `getObservations` method
 # which takes a callback, instead of returning a promise.
@@ -127,6 +129,7 @@ objectSpy warning: Failed to wrap property 'arguments', error 'TypeError: Cannot
 objectSpy warning: Failed to wrap property 'caller', error 'TypeError: Cannot redefine property: caller'. Using assignment instead.
 objectSpy info: Skipping wrapping of already-defined property under the key 'prototype'. Using assignment instead.
 Got message from referrer: Mispelt
+
 Log-style report:
 Tick        Event                 Path                         (new) value, or arguments -> return value
 0           read                  .subObj                      object
@@ -257,6 +260,12 @@ an enhanced version of
 [`Object.observe()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/observe)
 to recursively track changes to the entire object. Unfortunately, `Object.observe()`
 does not report property accesses; It only outputs changes.
+
+#### Functions of the object being wrapped are called through the spy
+
+In order for the spy to behave identically to the original object, the spy object must appear to expose the same functions as the original object. Unfortunately, as there is no way to copy code from one `Function` object to another, a spy object exposes functions which call the corresponding functions on the object being wrapped.
+
+Even if it was possible to copy code in a platform-independent way, the potential for functions to bind to variables belonging to scopes outside their own definitions would probably prevent copies from working as intended.
 
 #### Some changes/events are not observed
 
