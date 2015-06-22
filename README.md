@@ -37,7 +37,7 @@ are overly long.
 
 ```CoffeeScript
 # require() the interface
-objectSpy                   = require 'object-spy'
+objectSpy = require 'object-spy'
 
 # If desired, provide your own logger
 # (especially useful for suppressing debug output).
@@ -54,12 +54,14 @@ objectSpy.setLogger logger
 # You have an object that is built through the action
 # of several functions, and you don't know exactly
 # which parts of it are important.
-obj =
-    referer: "Mispelt"
-    referrer: "Not quite a duplicate"
-    magicNumber: NaN
-    subObj:
+prototype = { notOwnProperty: 2 }
+obj = Object.create prototype
+obj.referer = "Mispelt"
+obj.referrer = "Not quite a duplicate"
+obj.magicNumber = NaN
+obj.subObj =
         none: null
+obj.triple = (x) -> x * 3
 
 descriptor =
     configurable: true
@@ -76,18 +78,29 @@ processObj = (obj) ->
     subObj = obj.subObj
     obj.magicNumber = obj.magicNumber
     obj.magicNumber = subObj.none
-    obj.magicNumber += 1
+    # Spying on functions results in many 'info' and 'warn'
+    # messages because built-in function properties cannot be wrapped.
+    # Rather than hardcode a list of built-in properties to avoid wrapping,
+    # the library attempts to wrap all properties and logs when
+    # it doesn't work. This behaviour was chosen in order
+    # to be more future-proof.
+    obj.magicNumber += obj.triple(obj.notOwnProperty)
     console.log "Got message from referrer: %s", subObj.referer
 
-# Find out how the object is used directly
+# Prepare a spy object
 # (this is destructuring assignment syntax)
-{wrapped: spy, getObservationsPromise} = objectSpy.watch obj
-# There is also a `getObservations` method
-# which takes a callback, instead of returning a promise.
+{wrapped: spy, getObservationsPromise} = objectSpy.watch obj, {
+    prototypeWrappingDepth: -1
+    # Note that this leaves other options with default values
+}
+# Find out how the object is used directly
 processObj spy
 
-# Format usage data as a table of sequential events
+# There is also a `getObservations` method
+# which takes a callback, instead of returning a promise.
 promisedData = getObservationsPromise()
+
+# Format usage data as a table of sequential events
 logStyleReporter = objectSpy.reporters.logStyle()
 logStyleReporter.getReportAsString(promisedData).then( (report) ->
     console.log "Log-style report:"
@@ -108,28 +121,41 @@ eventCountsReporter.getReportAsString(promisedData).then( (report) ->
 The output of the above passage is:
 
 ```
+objectSpy info: Skipping wrapping of already-defined property under the key 'length'. Using assignment instead.
+objectSpy info: Skipping wrapping of already-defined property under the key 'name'. Using assignment instead.
+objectSpy warning: Failed to wrap property 'arguments', error 'TypeError: Cannot redefine property: arguments'. Using assignment instead.
+objectSpy warning: Failed to wrap property 'caller', error 'TypeError: Cannot redefine property: caller'. Using assignment instead.
+objectSpy info: Skipping wrapping of already-defined property under the key 'prototype'. Using assignment instead.
 Got message from referrer: Mispelt
 Log-style report:
-Tick        Event                 Path              Value type  (new) value (if stored)
-0           read                  subObj            object
-1           read                  magicNumber       NaN         NaN
-2           write                 magicNumber       NaN         NaN
-3           read                  subObj.none       null        null
-4           write                 magicNumber       null        null
-5           read                  magicNumber       null        null
-6           write                 magicNumber       number      1
-7           read                  subObj.referer    string      Mispelt
+Tick        Event                 Path                         (new) value, or arguments -> return value
+0           read                  .subObj                      object
+1           read                  .magicNumber                 null
+2           write                 .magicNumber                 null
+3           read                  .subObj.none                 null
+4           write                 .magicNumber                 null
+5           read                  .magicNumber                 null
+6           read                  .__proto__.notOwnProperty    2
+7           read                  .triple                      function
+8           call returned value   .triple                      (2) -> 6
+9           write                 .magicNumber                 6
+10          read                  .subObj.referer              "Mispelt"
 
 Event counts report:
+Event: call returned value
+	Path                         Count
+	.triple                      1
 Event: read
-	Path              Count
-	magicNumber       2
-	subObj            1
-	subObj.none       1
-	subObj.referer    1
+	Path                         Count
+	.__proto__.notOwnProperty    1
+	.magicNumber                 2
+	.subObj                      1
+	.subObj.none                 1
+	.subObj.referer              1
+	.triple                      1
 Event: write
-	Path              Count
-	magicNumber       3
+	Path                         Count
+	.magicNumber                 3
 ```
 
 ## Public interface (`src/index.coffee`)
@@ -157,21 +183,25 @@ Returns an object with the following properties
 
 ##### `options` parameter to `watch()`
 - `prototypeWrappingDepth`: An integer indicating the depth to which
-  the object's prototype chain should be watched.
+  the object's prototype chain should be watched. (Default: `0`)
   - `-1`: Watch all members of the prototype chain until encountering
     `Object.prototype` or `Function.prototype`
   - `0`: Don't watch the object's prototype
   - `n`, where `n > 0`: Watch the last `n` members
     of the prototype chain.
 - `wrapPropertyPrototypes`: If `true`, watch the prototypes of the
-  object's properties, the properties of the object's properties,
-  the properties of the properties of the object's prototype, and so
-  forth (i.e. the properties of the prototypes of every
-  non-primitive value in the structure).
+  object's properties the prototypes of the properties of the object's prototype,
+  and so forth. (i.e. Watch the prototypes of every
+  non-primitive value in the structure.) (Default: `false`)
   - The depth to which these additional prototype chains are
     watched is set by the `prototypeWrappingDepth` value.
-    If `prototypeWrappingDepth` is zero, and `wrapPropertyPrototypes`,
+    If `prototypeWrappingDepth` is zero, and `wrapPropertyPrototypes` is true,
     `watch()` will log a warning and do nothing.
+- `copyCallObjectValues`: If `true`, the values of non-primitive arguments
+  and return values of the wrapped object's methods are stored
+  for later reporting. Otherwise, only primitive values,
+  and the types, but not the values, of non-primitive values are stored.
+  (Default: `false`)
 
 ## Limitations
 
