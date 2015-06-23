@@ -123,11 +123,6 @@ eventCountsReporter.getReportAsString(promisedData).then( (report) ->
 The output of the above passage is:
 
 ```
-objectSpy info: Skipping wrapping of already-defined property under the key 'length'. Using assignment instead.
-objectSpy info: Skipping wrapping of already-defined property under the key 'name'. Using assignment instead.
-objectSpy warning: Failed to wrap property 'arguments', error 'TypeError: Cannot redefine property: arguments'. Using assignment instead.
-objectSpy warning: Failed to wrap property 'caller', error 'TypeError: Cannot redefine property: caller'. Using assignment instead.
-objectSpy info: Skipping wrapping of already-defined property under the key 'prototype'. Using assignment instead.
 Got message from referrer: Mispelt
 
 Log-style report:

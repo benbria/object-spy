@@ -161,7 +161,7 @@ makeAccessorUtilities = (descriptor, propName) ->
         false
 
     if descriptor.get?
-        logger.warn "The descriptor for the property under key '#{propName}' has a get() function.
+        logger.info "The descriptor for the property under key '#{propName}' has a get() function.
             The values that the get() function returns
             will not be wrapped when returned, because they are not part of the object itself."
         getValue = descriptor.get
