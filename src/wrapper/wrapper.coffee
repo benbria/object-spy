@@ -9,11 +9,12 @@ util                        = require '../util/util'
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
 exports.wrap = wrap = (obj, parentStoreManager=null, options) ->
     storeManager = new StoreManager(parentStoreManager, options)
-    wrapped = makeWrapperWithPrototype obj, storeManager, options
+    { wrapped, ignoredNames } = makeWrapperWithPrototype obj, storeManager, options
     propertyNames = Object.getOwnPropertyNames obj
 
     _.forEach propertyNames, (propName) ->
-        wrapProperty obj, wrapped, propName, storeManager, options
+        unless propName in ignoredNames
+            wrapProperty obj, wrapped, propName, storeManager, options
 
     return {wrapped, storeManager}
 
@@ -22,7 +23,7 @@ makeWrapperWithPrototype = (obj, storeManager, options) ->
     protoObj = Object.getPrototypeOf(obj)
 
     if protoObj is Function.prototype
-        ->
+        wrapped = ->
             exceptValue = null
             threwException = false
             try
@@ -37,10 +38,16 @@ makeWrapperWithPrototype = (obj, storeManager, options) ->
                 threwException
             }
             storeManager.addCallObservation callObservationData
-            
+
             if threwException
                 throw exceptValue
             return returnValue
+
+        # This prevents attempted redefinition of built-in properties
+        # of function objects, which will generate errors.
+        # The intention is to remain future-compatible by not hardcoding
+        # a list of built-in properties.
+        ignoredNames = Object.getOwnPropertyNames wrapped
 
     else
         if protoObj is null or protoObj is Object.prototype
@@ -65,15 +72,17 @@ makeWrapperWithPrototype = (obj, storeManager, options) ->
             protoObj = protoObjWrapResult.wrapped
             storeManager.setPrototypeStore protoObjWrapResult.storeManager
 
-        Object.create protoObj
+        wrapped = Object.create protoObj
+        ignoredNames = []
+
+    return {
+        wrapped,
+        ignoredNames
+    }
 
 wrapProperty = (obj, wrapped, propName, storeManager, options) ->
-    # This prevents attempted redefinition of built-in properties
-    # of function objects, which will generate errors.
-    # The intention is to remain future-compatible by not hardcoding
-    # a list of built-in properties.
-    if wrapped[propName]?
-        logger.info "
+    if wrapped.hasOwnProperty(propName)
+        logger.error "
             Skipping wrapping of already-defined property under the key '#{propName}'.
             Using assignment instead."
         wrapped[propName] = obj[propName]
@@ -138,7 +147,7 @@ wrapProperty = (obj, wrapped, propName, storeManager, options) ->
     try
         Object.defineProperty wrapped, propName, wrapperDescriptor
     catch err
-        logger.warn "
+        logger.error "
             Failed to wrap property '#{propName}', error '#{err}'.
             Using assignment instead."
         wrapped[propName] = obj[propName]
