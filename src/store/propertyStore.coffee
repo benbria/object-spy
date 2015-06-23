@@ -1,6 +1,7 @@
 _                           = require 'lodash'
+serialize                   = require 'serialize-javascript'
 {Promise}                   = require 'es6-promise'
-{OBSERVATION_CATEGORIES}    = require '../util/constants'
+{PROPERTY_OBSERVATION_CATEGORIES}    = require '../util/constants'
 util                        = require '../util/util'
 
 makeObservationGroup = (parentTickObj) ->
@@ -21,7 +22,7 @@ makeObservationGroup = (parentTickObj) ->
                 valueWrapper = {type}
                 valueWrapper.valueIsStored = shouldStoreValue(categoryName, value)
                 if valueWrapper.valueIsStored
-                    valueWrapper.value = value
+                    valueWrapper.value = serialize(value)
                 collection[name] ?= []
                 collection[name].push {
                     tick: parentTickObj.tick
@@ -30,7 +31,7 @@ makeObservationGroup = (parentTickObj) ->
 
         return {get, add}
 
-    for name, value of OBSERVATION_CATEGORIES
+    for name, value of PROPERTY_OBSERVATION_CATEGORIES
         group[value] = makeCollection(value)
 
     getGroup = ->
@@ -44,7 +45,7 @@ makeObservationGroup = (parentTickObj) ->
                 , {}
 
     addGroup = (groupChanges) ->
-        for name, value of OBSERVATION_CATEGORIES
+        for name, value of PROPERTY_OBSERVATION_CATEGORIES
             data = groupChanges[value]
             if data?
                 group[value].add data
@@ -55,14 +56,14 @@ makeObservationGroup = (parentTickObj) ->
 # This function prevents calls to wrapper accessor functions
 # that result in additional observations.
 shouldStoreValue = (category, value) ->
-    unless (category is OBSERVATION_CATEGORIES.REMOVED) or (category is OBSERVATION_CATEGORIES.READ)
+    unless (category is PROPERTY_OBSERVATION_CATEGORIES.REMOVED) or (category is PROPERTY_OBSERVATION_CATEGORIES.READ)
         true
     else
         {isObject} = util.customTypeof value
         !isObject
 
-class ObservationStore
+class PropertyStore
     constructor: (parentTickObj) ->
         {getGroup: @get, addGroup: @add} = makeObservationGroup(parentTickObj)
 
-module.exports = ObservationStore
+module.exports = PropertyStore

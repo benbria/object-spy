@@ -11,6 +11,7 @@ exports.concatenateArrays = (arrays) ->
         resolve(allArray)
     )
 
+# To be maintained in parallel with `isComplexTypeString`
 exports.customTypeof = (value) ->
     unless _.isNull(value)
         type = typeof value
@@ -24,3 +25,7 @@ exports.customTypeof = (value) ->
         type = 'null'
 
     return {type, isObject: _.isObject(value)}
+
+# To be maintained in parallel with `customTypeof`
+exports.isComplexTypeString = (type) ->
+    type in ['object', 'function', 'array', 'regexp']

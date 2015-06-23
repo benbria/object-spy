@@ -1,44 +1,93 @@
 _                           = require 'lodash'
 logger                      = require('../util/logger').getLogger()
-ObservationStoreManager     = require '../store/observationStoreManager'
-{OBSERVATION_CATEGORIES}    = require '../util/constants'
+StoreManager                = require '../store/storeManager'
 util                        = require '../util/util'
+
+{PROPERTY_OBSERVATION_CATEGORIES}    = require '../util/constants'
 
 # Note: This does not find/handle symbol properties
 #       (See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
 exports.wrap = wrap = (obj, parentStoreManager=null, options) ->
-    storeManager = new ObservationStoreManager(parentStoreManager)
-    wrapped = makeWrapperWithPrototype obj, storeManager, options
+    storeManager = new StoreManager(parentStoreManager, options)
+    { wrapped, ignoredNames } = makeWrapperWithPrototype obj, storeManager, options
     propertyNames = Object.getOwnPropertyNames obj
 
     _.forEach propertyNames, (propName) ->
-        wrapProperty obj, wrapped, propName, storeManager, options
+        unless propName in ignoredNames
+            wrapProperty obj, wrapped, propName, storeManager, options
 
     return {wrapped, storeManager}
 
-makeWrapperWithPrototype = (obj, storeManager, {prototypeWrappingDepth, wrapPropertyPrototypes}) ->
+makeWrapperWithPrototype = (obj, storeManager, options) ->
+    {prototypeWrappingDepth, wrapPropertyPrototypes} = options
     protoObj = Object.getPrototypeOf(obj)
-    if protoObj is null or protoObj is Object.prototype or protoObj is Function.prototype
-        # Avoid wrapping built-in objects.
-        # Another way to do this would perhaps be to check if
-        # `_.isNative(protoObj.constructor)` is `true`,
-        # but this relies on the accuracy of the `constructor` property,
-        # which [isn't guaranteed](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor).
-        prototypeWrappingDepth = 0
 
-    if prototypeWrappingDepth isnt 0
-        # Recursive case
-        if prototypeWrappingDepth > 0
-            prototypeWrappingDepth--
+    if protoObj is Function.prototype
+        wrapped = ->
+            exceptValue = null
+            threwException = false
+            try
+                returnValue = obj.apply this, arguments
+            catch exceptValue
+                threwException = true
 
-        logger.debug "Using a wrapper object as the prototype, prototypeWrappingDepth = #{prototypeWrappingDepth}"
-        protoObjWrapResult = wrap protoObj, storeManager, {prototypeWrappingDepth, wrapPropertyPrototypes}
-        protoObj = protoObjWrapResult.wrapped
-        storeManager.setPrototypeStore protoObjWrapResult.storeManager
+            callObservationData = {
+                arguments
+                exceptValue
+                returnValue
+                threwException
+            }
+            storeManager.addCallObservation callObservationData
 
-    Object.create protoObj
+            if threwException
+                throw exceptValue
+            return returnValue
+
+        # This prevents attempted redefinition of built-in properties
+        # of function objects, which will generate errors.
+        # The intention is to remain future-compatible by not hardcoding
+        # a list of built-in properties.
+        ignoredNames = Object.getOwnPropertyNames wrapped
+
+    else
+        if protoObj is null or protoObj is Object.prototype
+            # Avoid wrapping built-in objects.
+            # Another way to do this would perhaps be to check if
+            # `_.isNative(protoObj.constructor)` is `true`,
+            # but this relies on the accuracy of the `constructor` property,
+            # which [isn't guaranteed](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor).
+            prototypeWrappingDepth = 0
+
+        if prototypeWrappingDepth isnt 0
+            # Recursive case
+            if prototypeWrappingDepth > 0
+                prototypeWrappingDepth--
+
+            logger.debug "Using a wrapper object as the prototype,
+                prototypeWrappingDepth = #{prototypeWrappingDepth}"
+            protoObjWrapResult = wrap(
+                protoObj, storeManager,
+                _.defaults({prototypeWrappingDepth, wrapPropertyPrototypes}, options)
+            )
+            protoObj = protoObjWrapResult.wrapped
+            storeManager.setPrototypeStore protoObjWrapResult.storeManager
+
+        wrapped = Object.create protoObj
+        ignoredNames = []
+
+    return {
+        wrapped,
+        ignoredNames
+    }
 
 wrapProperty = (obj, wrapped, propName, storeManager, options) ->
+    if wrapped.hasOwnProperty(propName)
+        logger.error "
+            Skipping wrapping of already-defined property under the key '#{propName}'.
+            Using assignment instead."
+        wrapped[propName] = obj[propName]
+        return wrapped
+
     descriptor = Object.getOwnPropertyDescriptor obj, propName
     {
         getValue
@@ -71,10 +120,10 @@ wrapProperty = (obj, wrapped, propName, storeManager, options) ->
                 if options.wrapPropertyPrototypes
                     propertyWrapResult = wrap currentValue, storeManager, options
                 else
-                    propertyWrapResult = wrap currentValue, storeManager, {
-                        prototypeWrappingDepth: 0
-                        wrapPropertyPrototypes: false
-                    }
+                    propertyWrapResult = wrap(
+                        currentValue, storeManager,
+                        _.defaults({prototypeWrappingDepth: 0, wrapPropertyPrototypes: false}, options)
+                    )
                 isWrapped = true
                 currentValue = propertyWrapResult.wrapped
                 setValue(currentValue)
@@ -95,7 +144,15 @@ wrapProperty = (obj, wrapped, propName, storeManager, options) ->
                 logger.debug "set() called for '#{propName}'"
             setValue(newValue)
 
-    Object.defineProperty wrapped, propName, wrapperDescriptor
+    try
+        Object.defineProperty wrapped, propName, wrapperDescriptor
+    catch err
+        logger.error "
+            Failed to wrap property '#{propName}', error '#{err}'.
+            Using assignment instead."
+        wrapped[propName] = obj[propName]
+
+    return wrapped
 
 makeAccessorUtilities = (descriptor, propName) ->
     value = null
@@ -104,40 +161,40 @@ makeAccessorUtilities = (descriptor, propName) ->
         false
 
     if descriptor.get?
-        logger.warn "The descriptor for the property under key '#{propName}' has a get() function.
+        logger.info "The descriptor for the property under key '#{propName}' has a get() function.
             The values that the get() function returns
             will not be wrapped when returned, because they are not part of the object itself."
         getValue = descriptor.get
-        getEventCategory = OBSERVATION_CATEGORIES.GET
+        getEventCategory = PROPERTY_OBSERVATION_CATEGORIES.GET
     else if descriptor.set?
         getValue = ->
             logger.debug "get() called for '#{propName}', but property has no getter."
             return undefined
-        getEventCategory = OBSERVATION_CATEGORIES.GET_ATTEMPT
+        getEventCategory = PROPERTY_OBSERVATION_CATEGORIES.GET_ATTEMPT
     else
         value = descriptor.value
         getValue = ->
             value
-        getEventCategory = OBSERVATION_CATEGORIES.READ
+        getEventCategory = PROPERTY_OBSERVATION_CATEGORIES.READ
         wrapOnRetrievalTest = (currentValue) ->
             {isObject} = util.customTypeof currentValue
             isObject
 
     if descriptor.set?
         setValue = descriptor.set
-        setEventCategory = OBSERVATION_CATEGORIES.SET
+        setEventCategory = PROPERTY_OBSERVATION_CATEGORIES.SET
     else if descriptor.get?
         setValue = (newValue) ->
             logger.debug "set() called for '#{propName}', but property has no setter."
-        setEventCategory = OBSERVATION_CATEGORIES.SET_ATTEMPT
+        setEventCategory = PROPERTY_OBSERVATION_CATEGORIES.SET_ATTEMPT
     else if descriptor.writable
         setValue = (newValue) ->
             value = newValue
-        setEventCategory = OBSERVATION_CATEGORIES.WRITE
+        setEventCategory = PROPERTY_OBSERVATION_CATEGORIES.WRITE
     else
         setValue = (newValue) ->
             logger.debug "set() called for '#{propName}', but property is not writable."
-        setEventCategory = OBSERVATION_CATEGORIES.WRITE_ATTEMPT
+        setEventCategory = PROPERTY_OBSERVATION_CATEGORIES.WRITE_ATTEMPT
 
     return {
         getValue

@@ -29,6 +29,7 @@ prepareOptions = (options) ->
     options = _.defaults {}, options, {
         prototypeWrappingDepth: 0
         wrapPropertyPrototypes: false
+        copyCallObjectValues: false
     }
 
     valid = true
@@ -53,6 +54,11 @@ prepareOptions = (options) ->
         logger.warn "watch() received options where `wrapPropertyPrototypes` is true,
             but `prototypeWrappingDepth` is zero.
             The two settings are in conflict."
+        valid = false
+
+    if util.customTypeof(options.copyCallObjectValues).type isnt 'boolean'
+        logger.warn "watch() received options with invalid type of `copyCallObjectValues` property.
+            Expected a boolean."
         valid = false
 
     if valid
