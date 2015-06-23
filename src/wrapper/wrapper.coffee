@@ -24,18 +24,21 @@ makeWrapperWithPrototype = (obj, storeManager, options) ->
     if protoObj is Function.prototype
         ->
             exceptValue = null
+            threwException = false
             try
                 returnValue = obj.apply this, arguments
             catch exceptValue
+                threwException = true
 
             callObservationData = {
                 arguments
                 exceptValue
                 returnValue
+                threwException
             }
-
             storeManager.addCallObservation callObservationData
-            if exceptValue?
+            
+            if threwException
                 throw exceptValue
             return returnValue
 

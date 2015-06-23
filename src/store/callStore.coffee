@@ -27,9 +27,9 @@ class CallStore
             return result
 
     add: (data) ->
-        if data.returnValue? and !data.exceptValue?
+        if (data.returnValue? or (!data.returnValue? and !data.threwException)) and !data.exceptValue?
             @_addCallReturn data
-        else if data.exceptValue? and !data.returnValue?
+        else if (data.exceptValue? or (!data.exceptValue? and data.threwException)) and !data.returnValue?
             @_addCallExcept data
         else
             logger.error "Unknown type of call event passed to CallStore.add()"
